@@ -285,7 +285,7 @@ export default function App() {
     const onKey = (e: KeyboardEvent) => {
       const el = e.target as HTMLElement | null
       if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)) return
-      if (galleryOpen || discovery || notesOpen) return
+      if (galleryOpen || discovery || notesOpen || reportOpen) return
       if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
         e.preventDefault()
         step(1)
@@ -296,7 +296,7 @@ export default function App() {
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
-  }, [step, galleryOpen, discovery, notesOpen])
+  }, [step, galleryOpen, discovery, notesOpen, reportOpen])
 
   /** 对照物种按当前物种在列表里的位置错开取，保证不会选到自己 */
   const pickPeer = useCallback(

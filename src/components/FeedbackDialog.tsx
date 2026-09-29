@@ -1,9 +1,10 @@
-import { useEffect } from 'react'
+import { useId, useRef } from 'react'
 import s from './FeedbackDialog.module.css'
 import { useT } from '../i18n/useT'
 import { FeedbackForm } from './FeedbackForm'
 import { partOfAnchor } from '../data/parts'
 import type { Insect } from '../data/types'
+import { useModalFocus } from './useModalFocus'
 
 /**
  * 纠错对话框。
@@ -27,14 +28,9 @@ export function FeedbackDialog({
   onClose: () => void
 }) {
   const t = useT()
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  }, [onClose])
+  const panel = useRef<HTMLDivElement>(null)
+  const titleId = useId()
+  useModalFocus(panel, onClose)
 
   // 标注点先归到部位组再落成文案：anchor 是内部键（'hindwing'），
   // 部位组才有中英两套现成的显示名
@@ -44,10 +40,10 @@ export function FeedbackDialog({
 
   return (
     <div className={s.backdrop} onMouseDown={onClose}>
-      <div className={`card ${s.sheet}`} onMouseDown={(e) => e.stopPropagation()}>
+      <div className={`card ${s.sheet}`} ref={panel} role="dialog" aria-modal="true" aria-labelledby={titleId} onMouseDown={(e) => e.stopPropagation()}>
         <div className={s.head}>
           <div>
-            <div className={s.title}>{t('feedback.correction.title')}</div>
+            <div id={titleId} className={s.title}>{t('feedback.correction.title')}</div>
             <div className={s.sub}>{t('feedback.correction.sub')}</div>
           </div>
           <button className={s.close} onClick={onClose} aria-label={t('common.close')}>
