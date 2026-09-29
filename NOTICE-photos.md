@@ -1,6 +1,6 @@
 # 实拍照片署名
 
-本文件由 `npm run photos` 生成，请勿手改。
+本文件由 `npm run photos:notice` 生成，请勿手改。
 
 站上每只虫的实拍图都来自 [iNaturalist](https://www.inaturalist.org/)，
 全部为 Creative Commons 授权。图片旁已逐张署名，这份清单是为了能一次核对完。
@@ -61,7 +61,7 @@
 | `rhinoceros-beetle` | Kim, Hyun-tae | cc-by | [2820427](https://www.inaturalist.org/observations/2510025) |
 | `robber-fly` | gg_copen | cc-by-nc ⚠ | [667059451](https://www.inaturalist.org/observations/365361321) |
 | `rove-beetle` | no rights reserved | cc0 | [444293079](https://www.inaturalist.org/observations/248632367) |
-| `shining-chafer` | Sakern | 永隔一江水 | cc-by-nc ⚠ | [383965870](https://www.inaturalist.org/observations/217070569) |
+| `shining-chafer` | Sakern \| 永隔一江水 | cc-by-nc ⚠ | [383965870](https://www.inaturalist.org/observations/217070569) |
 | `silk-moth` | Lawrence Hylton | cc-by | [162199399](https://www.inaturalist.org/observations/97519283) |
 | `stag-beetle` | 黄彦豪 | cc-by | [618329535](https://www.inaturalist.org/observations/339852401) |
 | `stick-insect` | no rights reserved | cc0 | [300748007](https://www.inaturalist.org/observations/173195175) |

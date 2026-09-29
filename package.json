@@ -29,6 +29,8 @@
     "test": "vitest run",
     "photos": "node scripts/fetch-photos.mjs",
     "photos:check": "node scripts/fetch-photos.mjs --check",
+    "photos:notice": "node scripts/photo-notice-cli.mjs",
+    "photos:notice:check": "node scripts/photo-notice-cli.mjs --check",
     "inbox": "node scripts/inbox.mjs",
     "db:schema": "wrangler d1 execute insect-world --remote --file=db/schema.sql",
     "db:seed": "wrangler d1 execute insect-world --remote --file=db/seed.sql",

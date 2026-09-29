@@ -121,6 +121,9 @@ for (const [id, entry] of Object.entries(manifest)) {
     bytes += statSync(dest).size
   } catch (err) {
     failed++
+    // 清单可能已换成另一位摄影者的图。旧同名文件若留下，页面会按新清单
+    // 给旧图署名；下载失败时宁可不展示照片，也不能发布错署名的图片。
+    if (existsSync(dest)) unlinkSync(dest)
     console.log(`  ${id}：${err.message}`)
   }
 }

@@ -4,9 +4,9 @@ import manifest from './photos.json'
  * 实拍照片清单 —— 由 `scripts/fetch-photos.mjs` 从 iNaturalist 生成。
  *
  * 这里**只有元数据**。图片字节由 `scripts/download-photos.mjs` 在构建期抓进
- * `public/photos/`，从不进 git —— 本仓库是 MIT，而 59 张里有 22 张是禁商用的
+ * `public/photos/`，从不进 git —— 本仓库是 MIT，而部分照片是禁商用的
  * CC-BY-NC-*，把那些字节提交进来会让仓库的 MIT 声明变成骗人的
- * （理由写在 fetch-photos.mjs 的文件头，那 22 种也在那儿逐一列了名）。
+ * （理由写在 fetch-photos.mjs 的文件头，准确数量见 NOTICE-photos.md）。
  */
 
 export interface SpeciesPhoto {
@@ -29,9 +29,7 @@ const PHOTOS = manifest as Record<string, SpeciesPhoto>
 /**
  * 这只虫有没有实拍照片。
  *
- * 61 种有 iNat taxon 记录，其中 59 种能挑出一张授权合适的
- * （robber-fly 与 shining-chafer 各只有 2 张、全是保留所有权利）。
- * 拿不到就返回 null，界面整块不显示 —— 绝不退而求其次去用没授权的图。
+ * 清单没有该物种时返回 null，界面整块不显示 —— 绝不退而求其次去用没授权的图。
  */
 export function photoOf(insectId: string): SpeciesPhoto | null {
   return PHOTOS[insectId] ?? null

@@ -1,26 +1,11 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import type { Insect } from '../data/types'
 import type { FieldNotes } from '../hooks/useFieldNotes'
 import { InsectGlyph } from './InsectGlyph'
 import s from './NotesPanel.module.css'
 import { useT } from '../i18n/useT'
 import { EVENTS, track } from '../analytics'
-
-/** 关掉弹层的通用行为：Esc 键 + 打开时锁住背景滚动 */
-function useDismiss(onClose: () => void) {
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
-    document.addEventListener('keydown', onKey)
-    const prev = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.removeEventListener('keydown', onKey)
-      document.body.style.overflow = prev
-    }
-  }, [onClose])
-}
+import { useModalFocus } from './useModalFocus'
 
 /**
  * 观察笔记面板。
@@ -44,7 +29,9 @@ export function NotesPanel({
   onSelect: (id: string) => void
   onClose: () => void
 }) {
-  useDismiss(onClose)
+  const panel = useRef<HTMLDivElement>(null)
+  const titleId = useId()
+  useModalFocus(panel, onClose)
   const t = useT()
 
   const [draft, setDraft] = useState(notes[insect.id]?.text ?? '')
@@ -78,10 +65,10 @@ export function NotesPanel({
 
   return (
     <div className={s.backdrop} onMouseDown={onClose}>
-      <div className={`card ${s.sheet}`} onMouseDown={(e) => e.stopPropagation()}>
+      <div className={`card ${s.sheet}`} ref={panel} role="dialog" aria-modal="true" aria-labelledby={titleId} onMouseDown={(e) => e.stopPropagation()}>
         <div className={s.head}>
           <div>
-            <div className={s.title}>{t('notes.title')}</div>
+            <div id={titleId} className={s.title}>{t('notes.title')}</div>
             <div className={s.sub}>
               {rows.length > 0
                 ? t('notes.recordedCount', { n: rows.length })

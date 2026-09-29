@@ -41,5 +41,8 @@ jobs:
       - name: 全量测试
         run: npm test
 
+      - name: 照片署名清单与元数据一致
+        run: npm run photos:notice:check
+
       - name: 生产构建
         run: npm run build

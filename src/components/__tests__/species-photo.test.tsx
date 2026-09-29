@@ -6,7 +6,7 @@
  * 这几条守的都是「坏了也不报错」的点，其中前两条是**许可证义务**——
  * 漏了署名不是难看，是违约，而且页面照常好看，没人会发现。
  */
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { renderZh } from '../../i18n/testing'
@@ -66,6 +66,12 @@ describe('清单本身', () => {
 })
 
 describe('没有照片时', () => {
+  it('清单有照片但文件下载失败时隐藏破图和错误署名', () => {
+    const { container } = renderZh(<SpeciesPhoto insectId="monarch-butterfly" name="帝王蝶" />)
+    fireEvent.error(container.querySelector('img')!)
+    expect(container.querySelector('figure')).toBeNull()
+  })
+
   it('整块不渲染 —— 一个空框比没有框难看得多', () => {
     const { container } = renderZh(<SpeciesPhoto insectId="not-a-species" name="不存在" />)
     expect(container.querySelector('figure')).toBeNull()

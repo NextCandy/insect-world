@@ -44,6 +44,7 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { writePhotoNotice } from './photo-notice.mjs'
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const OUT = path.join(ROOT, 'src/data/photos.json')
@@ -271,31 +272,8 @@ console.log(`\n✓ 写入 ${path.relative(ROOT, OUT)}`)
  * 仓库级署名清单。
  *
  * 页面上每张图旁边已经逐条署名了（那才是 CC 的 BY 义务真正落地的地方），
- * 这份是给**核对**用的：一眼看完 59 条分别是谁拍的、什么许可证，
+ * 这份是给**核对**用的：一眼看完每条分别是谁拍的、什么许可证，
  * 以及哪些是禁商用的。逐页翻网站核不了这个。
  */
-const NOTICE = path.join(ROOT, 'NOTICE-photos.md')
-const lines = [
-  '# 实拍照片署名',
-  '',
-  '本文件由 `npm run photos` 生成，请勿手改。',
-  '',
-  '站上每只虫的实拍图都来自 [iNaturalist](https://www.inaturalist.org/)，',
-  '全部为 Creative Commons 授权。图片旁已逐张署名，这份清单是为了能一次核对完。',
-  '',
-  '**图片字节不在本仓库内** —— 仓库是 MIT，而下表中带 `NC` 的照片禁止商用，',
-  '把它们提交进来会让 MIT 声明变成骗人的。图片由 `scripts/download-photos.mjs`',
-  '在构建期抓进 `public/photos/`（已 gitignore）。',
-  '',
-  `共 ${Object.keys(sorted).length} 张，其中禁商用 ${nonCommercial.length} 张。`,
-  '',
-  '| 物种 | 摄影 | 许可证 | 原图 |',
-  '| --- | --- | --- | --- |',
-]
-for (const [id, e] of Object.entries(sorted)) {
-  const nc = String(e.license).includes('-nc') ? ' ⚠' : ''
-  lines.push(`| \`${id}\` | ${e.photographer} | ${e.license}${nc} | [${e.photoId}](${e.inatUrl}) |`)
-}
-lines.push('', '⚠ = 禁商用（CC-*-NC-*）。这个站一旦要商用，必须先换掉这些图。', '')
-writeFileSync(NOTICE, lines.join('\n'), 'utf8')
-console.log(`✓ 写入 ${path.relative(ROOT, NOTICE)}`)
+writePhotoNotice(sorted, ROOT)
+console.log('✓ 写入 NOTICE-photos.md')

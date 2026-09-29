@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import s from './SpeciesPhoto.module.css'
 import { useT } from '../i18n/useT'
 import { licenseLabel } from '../data/photoPolicy'
@@ -25,16 +26,19 @@ import { IconArrowRight } from './icons'
 export function SpeciesPhoto({ insectId, name }: { insectId: string; name: string }) {
   const t = useT()
   const photo = photoOf(insectId)
+  const src = localPhotoSrc(insectId)
+  const [failedSrc, setFailedSrc] = useState<string | null>(null)
 
-  // 61 种有 taxon 记录，其中 59 种挑得出授权合适的照片。剩下两种整块不显示 ——
+  // 清单里没有照片的物种整块不显示 ——
   // 一个空框比没有框难看得多
-  if (!photo) return null
+  if (!photo || failedSrc === src) return null
 
   return (
     <figure className={s.figure}>
       <img
         className={s.img}
-        src={localPhotoSrc(insectId)}
+        src={src}
+        onError={() => setFailedSrc(src)}
         alt={t('photo.alt', { name })}
         loading="lazy"
         decoding="async"

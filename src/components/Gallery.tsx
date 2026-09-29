@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useId, useMemo, useRef } from 'react'
 import type { Insect, Order } from '../data/types'
 import { useLabels, useLocale, useT } from '../i18n/useT'
 import { InsectGlyph } from './InsectGlyph'
@@ -7,22 +7,7 @@ import { isPlainLeftClick } from './speciesLink'
 import s from './Gallery.module.css'
 import { canonicalPath } from '../i18n/hrefForLocale'
 import { EVENTS, track } from '../analytics'
-
-/** 关掉弹层的通用行为：Esc 键 + 打开时锁住背景滚动 */
-function useDismiss(onClose: () => void) {
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
-    document.addEventListener('keydown', onKey)
-    const prev = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.removeEventListener('keydown', onKey)
-      document.body.style.overflow = prev
-    }
-  }, [onClose])
-}
+import { useModalFocus } from './useModalFocus'
 
 export function Gallery({
   insects,
@@ -35,7 +20,9 @@ export function Gallery({
   onSelect: (id: string) => void
   onClose: () => void
 }) {
-  useDismiss(onClose)
+  const panel = useRef<HTMLDivElement>(null)
+  const titleId = useId()
+  useModalFocus(panel, onClose)
   const t = useT()
   const locale = useLocale()
   const { order: orderLabel } = useLabels()
@@ -53,10 +40,10 @@ export function Gallery({
 
   return (
     <div className={s.backdrop} onClick={onClose}>
-      <div className={s.sheet} onClick={(e) => e.stopPropagation()}>
+      <div className={s.sheet} ref={panel} role="dialog" aria-modal="true" aria-labelledby={titleId} onClick={(e) => e.stopPropagation()}>
         <div className={s.head}>
           <div>
-            <h2 className={s.title}>{t('gallery.title', { n: insects.length })}</h2>
+            <h2 id={titleId} className={s.title}>{t('gallery.title', { n: insects.length })}</h2>
             <div className={s.sub}>{t('gallery.subtitle', { n: groups.length })}</div>
           </div>
           <button className={s.close} onClick={onClose} aria-label={t('common.close')}>
