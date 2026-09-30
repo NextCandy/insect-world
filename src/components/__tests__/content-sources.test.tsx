@@ -1,0 +1,61 @@
+/** @vitest-environment jsdom */
+import { cleanup, screen, within } from '@testing-library/react'
+import { afterEach, describe, expect, it } from 'vitest'
+import { renderEn, renderZh } from '../../i18n/testing'
+import { INSECTS as zhInsects } from '../../data/insects.zh'
+import { INSECTS as enInsects } from '../../data/insects.en'
+import { DetailPanel } from '../DetailPanel'
+
+const props = { onCompare: () => {}, onDiscover: () => {}, onReportError: () => {} }
+afterEach(cleanup)
+
+describe('detail source evidence', () => {
+  it('shows three real evidence links with specific scope and keeps the correction action after them', () => {
+    renderZh(<DetailPanel insect={zhInsects[0]} {...props} />)
+    const section = screen.getByRole('region', { name: '来源与核校' })
+    const links = within(section).getAllByRole('link')
+    expect(links.map(link => link.getAttribute('href'))).toEqual([
+      'https://www.env.go.jp/content/000283612.pdf',
+      'https://www.tokyo-zoo.net/tama/encyclopedia/japanese-rhinoceros-beetle/index.html',
+      'https://pmc.ncbi.nlm.nih.gov/articles/PMC6835817/',
+    ])
+    expect(section.textContent).toContain('日本亚种体长（不含角）')
+    expect(section.textContent).toContain('食性与分布')
+    expect(section.textContent).toContain('雄虫角斗')
+    expect(section.textContent).toContain('仅以下事实')
+    expect(section.textContent).toContain('热点、课程和测验仍未全面核校')
+    expect(section.textContent).toContain('非专家复审')
+    expect(section.textContent).toContain('2026-09-30')
+    const correction = screen.getByRole('button', { name: /纠错|有误|报告|画得|更正/ })
+    expect(section.compareDocumentPosition(correction) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('localizes evidence and its limits in English', () => {
+    renderEn(<DetailPanel insect={enInsects[0]} {...props} />)
+    const section = screen.getByRole('region', { name: 'Sources and checks' })
+    expect(within(section).getAllByRole('link')).toHaveLength(3)
+    expect(section.textContent).toContain('Japanese subspecies length (excluding horns)')
+    expect(section.textContent).toContain('Hotspots, lessons and quizzes have not been fully checked')
+    expect(section.textContent).toContain('No expert review')
+    expect(section.textContent).not.toMatch(/[一-鿿]/)
+  })
+
+  it('presents scoped measurements and life stages without unverified strength or fixed lifespan claims', () => {
+    renderEn(<DetailPanel insect={enInsects[0]} {...props} />)
+    const detail = screen.getByRole('complementary')
+    expect(detail.textContent).toContain('Japanese subspecies')
+    expect(detail.textContent).toContain('excluding the horn')
+    expect(detail.textContent).toContain('overwinters in Japan')
+    expect(detail.textContent).not.toContain('dozens of times')
+    expect(detail.textContent).not.toContain('1–2 months')
+    expect(detail.textContent).not.toContain('8–10 months')
+    expect(detail.textContent).not.toContain('bark crevices')
+  })
+
+  it('does not manufacture evidence links for a species awaiting checks', () => {
+    renderZh(<DetailPanel insect={zhInsects[1]} {...props} />)
+    const section = screen.getByRole('region', { name: '来源与核校' })
+    expect(section.textContent).toContain('尚未逐条核校')
+    expect(within(section).queryAllByRole('link')).toHaveLength(0)
+  })
+})

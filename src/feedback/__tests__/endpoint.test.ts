@@ -55,4 +55,25 @@ describe('反馈端点与真实 SQLite', () => {
     expect((await onRequestPost({ request: request({ kind: 'note', body: '测试', website: 'bot' }), env })).status).toBe(200)
     expect(sql.prepare('SELECT COUNT(*) AS n FROM messages').get()?.n).toBe(0)
   })
+
+  it.each([null, [], 'text', 1, true])('顶层非对象 %j 返回400且不写库', async (value) => {
+    const { db, sql } = database()
+    const response = await onRequestPost({ request: request(value), env: { DB: db, FEEDBACK_SALT: 'test-salt' } })
+    expect(response.status).toBe(400)
+    expect(await response.json()).toEqual({ ok: false, error: 'bad-json' })
+    expect(sql.prepare('SELECT COUNT(*) AS n FROM messages').get()?.n).toBe(0)
+  })
+
+  it('超大 JSON 在写库前被拒绝，普通 500 字中文仍可提交', async () => {
+    const { db, sql } = database()
+    const env = { DB: db, FEEDBACK_SALT: 'test-salt' }
+    const big = await onRequestPost({ request: request({ kind: 'note', body: '正常正文', padding: 'x'.repeat(8192) }), env })
+    expect(big.status).toBe(413)
+    expect(await big.json()).toEqual({ ok: false, error: 'too-large' })
+    expect(sql.prepare('SELECT COUNT(*) AS n FROM messages').get()?.n).toBe(0)
+    const valid = await onRequestPost({ request: request({ kind: 'note', body: '虫'.repeat(500) }), env })
+    expect(valid.status).toBe(200)
+    expect(sql.prepare('SELECT body FROM messages').get()?.body).toBe('虫'.repeat(500))
+  })
+
 })

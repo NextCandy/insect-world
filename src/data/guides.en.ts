@@ -29,7 +29,7 @@ export const GUIDES: Record<string, Guide> = {
       },
       {
         title: "A Brief Adult Life",
-        body: "From egg to adult takes eight to ten months, the larva quietly feeding on rotting wood in the humus; the horned adult stage that follows often lasts only one to two months, the horn gear for a short finale.",
+        body: "In Japan, this beetle has one generation per year. Larvae feed in leaf mould and overwinter, becoming adults the next summer. Males then use their head horns in fights at tree sap sites.",
       },
     ],
     motion: {
@@ -46,17 +46,17 @@ export const GUIDES: Record<string, Guide> = {
       {
         question: "Which statement about the life of a rhinoceros beetle is correct?",
         options: [
-          "The horned adult stage lasts only one or two months, while the larval stage is far longer",
+          "In Japan, larvae overwinter and become adults the following summer",
           "Adult and larval lifespans are roughly equal, both a few months",
           "The larval stage is short, and most of its life is spent as a horned adult",
         ],
         answer: 0,
-        explain: "The larval stage lasts eight to ten months, spent feeding in the humus; once the horned adult stage arrives, only one to two months of life remain.",
+        explain: "In Japan, it has one generation per year: larvae grow in leaf mould, overwinter, and become sap-feeding adults the following summer.",
       },
     ],
     habitat: {
       title: "Humus and Sap Wounds",
-      body: "By day it hides in humus or bark cracks, the damp shade evading predators; after dark it follows scent to oak and broadleaf trunks, sharing sap wounds with stag beetles and moths in the forest's nighttime feeding scene.",
+      body: "This beetle lives in woodlands and satoyama landscapes. Larvae feed and grow in leaf mould. Adults are mainly active at night and feed on tree sap, where males also compete for access.",
     },
   },
 

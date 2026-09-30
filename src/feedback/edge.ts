@@ -114,11 +114,38 @@ export async function guard(fn: () => Promise<Response>): Promise<Response> {
   }
 }
 
-/** 安全地读 JSON 体。畸形体不该让边缘抛异常，返回 null 由调用方回 400。 */
-export async function readJson<T>(request: Request): Promise<T | null> {
+/** 包括 JSON 包装和转义；远高于 500 字正文的正常请求大小。 */
+const MAX_JSON_BYTES = 8 * 1024
+type JsonReadResult<T> = { ok: true; value: T } | { ok: false; reason: 'too-large' | 'bad-json' }
+
+/** 按实际流字节计量，不能相信客户端提供的 Content-Length。 */
+export async function readJson<T>(request: Request): Promise<JsonReadResult<T>> {
+  const declared = request.headers.get('Content-Length')
+  if (declared && /^\d+$/.test(declared) && Number(declared) > MAX_JSON_BYTES) {
+    await request.body?.cancel().catch(() => {})
+    return { ok: false, reason: 'too-large' }
+  }
+  if (!request.body) return { ok: false, reason: 'bad-json' }
+  const reader = request.body.getReader()
   try {
-    return (await request.json()) as T
+    const decoder = new TextDecoder('utf-8', { fatal: true })
+    let bytes = 0
+    let text = ''
+    while (true) {
+      const chunk = await reader.read()
+      if (chunk.done) break
+      bytes += chunk.value.byteLength
+      if (bytes > MAX_JSON_BYTES) {
+        await reader.cancel().catch(() => {})
+        return { ok: false, reason: 'too-large' }
+      }
+      text += decoder.decode(chunk.value, { stream: true })
+    }
+    return { ok: true, value: JSON.parse(text + decoder.decode()) as T }
   } catch {
-    return null
+    await reader.cancel().catch(() => {})
+    return { ok: false, reason: 'bad-json' }
+  } finally {
+    reader.releaseLock()
   }
 }

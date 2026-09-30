@@ -20,6 +20,7 @@ import App from '../App'
 vi.mock('../three/registry', () => ({
   isKnownSpecies: () => true,
   prefetchInsectModel: () => {},
+  loadInsectModel: () => Promise.resolve(null),
 }))
 
 vi.mock('../three/webgl', () => ({

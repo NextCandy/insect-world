@@ -15,10 +15,13 @@ export const onRequestPost = async ({ request, env }: EdgeContext): Promise<Resp
     // 盐缺席时必须拒收：没有盐的哈希等于把 IP 明文存进库，比不收这条反馈严重得多
     if (!db || !salt) return json({ ok: false, error: 'unconfigured' }, 503)
 
-    const raw = await readJson<RawSubmission>(request)
-    if (raw === null) return json({ ok: false, error: 'bad-json' }, 400)
+    const body = await readJson<RawSubmission>(request)
+    if (!body.ok) return json({ ok: false, error: body.reason }, body.reason === 'too-large' ? 413 : 400)
 
-    const verdict = validateSubmission(raw)
+    if (!body.value || typeof body.value !== 'object' || Array.isArray(body.value)) {
+      return json({ ok: false, error: 'bad-json' }, 400)
+    }
+    const verdict = validateSubmission(body.value)
     if (!verdict.ok) {
       // 蜜罐命中：对外报成功再默默丢弃。让机器人以为得手了、不去换招 ——
       // 回 400 等于告诉它「这条路走不通」，它下次就换一条

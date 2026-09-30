@@ -8,6 +8,21 @@ import { definePart } from './part'
  */
 export const PART = definePart(
   {
+    'sources.title': '来源与核校',
+    'sources.limits': '仅以下事实已按所列来源核对；热点、课程和测验仍未全面核校。非专家复审。',
+    'sources.pending': '尚未逐条核校；内容未经昆虫学专家复审。',
+    'sources.envTitle': '日本环境省：日本亚种生态表（PDF，第36页）',
+    'sources.zooTitle': '多摩动物公园：物种资料',
+    'sources.combatTitle': '2019年角斗研究：头角表现与种群差异',
+    'sources.length': '日本亚种体长（不含角）',
+    'sources.dietRange': '食性与分布',
+    'sources.combat': '雄虫角斗',
+    'sources.supports': '支持：{facts}',
+    'sources.fullText': '已读全文',
+    'sources.officialPage': '已读官方页面',
+    'sources.checkedAt': '核对日期：{date}',
+    'sources.separator': '、',
+
     'compare.current': '当前',
     'compare.comparison': '对照',
     'compare.length': '体长',
@@ -33,6 +48,21 @@ export const PART = definePart(
     'library.viewAll': '查看全部 {n} 种',
   },
   {
+    'sources.title': 'Sources and checks',
+    'sources.limits': 'Only the facts listed below were checked against these sources. Hotspots, lessons and quizzes have not been fully checked. No expert review.',
+    'sources.pending': 'Not yet checked claim by claim. No entomologist review.',
+    'sources.envTitle': 'Japan Ministry of the Environment: Japanese subspecies table (PDF, page 36)',
+    'sources.zooTitle': 'Tama Zoological Park: species profile',
+    'sources.combatTitle': '2019 combat study: horn performance across populations',
+    'sources.length': 'Japanese subspecies length (excluding horns)',
+    'sources.dietRange': 'Diet and range',
+    'sources.combat': 'Male combat',
+    'sources.supports': 'Supports: {facts}',
+    'sources.fullText': 'Full text read',
+    'sources.officialPage': 'Official page read',
+    'sources.checkedAt': 'Checked: {date}',
+    'sources.separator': ', ',
+
     'compare.current': 'Current',
     'compare.comparison': 'Comparison',
     'compare.length': 'Length',

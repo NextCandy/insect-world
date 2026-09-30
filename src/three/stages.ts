@@ -63,12 +63,25 @@ const key = (speciesId: string, stage: LifeStage) => `${speciesId}-${stage}`
 /**
  * 构建结果缓存。
  *
- * 与 `registry.ts` 的 LRU 不同，这里**不做逐出**：一次生活史演示最多同时用到
- * 4 个阶段，且用户是在几个阶段之间来回看的，逐出等于每次回看都重建。
- * 阶段模型比成虫简单得多（卵是个椭球，蛹是带翅芽的光滑荚），显存代价小。
+ * 与 `registry.ts` 的 LRU 不同，这里暂不逐出，方便同一条生活史来回查看。
+ * 只有真正展示才构建并入缓存；预取只加载模块。跨物种展示的阶段仍会累积，
+ * 后续引入上限时还需保护正在展示和离场的模型，不能直接照抄成虫的逐出逻辑。
  */
 const cache = new Map<string, InsectModel>()
 const inflight = new Map<string, Promise<InsectModel>>()
+const modules = new Map<string, Promise<Record<string, unknown>>>()
+
+/** 预取与展示共享模块任务，拒绝任务清掉后允许真正展示时重试。 */
+function loadModule(k: string, loader: Loader): Promise<Record<string, unknown>> {
+  const pending = modules.get(k)
+  if (pending) return pending
+  const task = loader().catch((err) => {
+    modules.delete(k)
+    throw err
+  })
+  modules.set(k, task)
+  return task
+}
 
 /** 从模块里挑 build* 导出。阶段文件**只准有一个** —— 多个就是把两个阶段写进了同一个文件。 */
 function pickBuilder(mod: Record<string, unknown>, id: string): () => InsectModel {
@@ -126,7 +139,7 @@ export async function loadStageModel(speciesId: string, stage: LifeStage): Promi
   const loader = LOADERS[k]
   if (!loader) throw new Error(`未注册的生活史阶段：${k}`)
 
-  const task = loader()
+  const task = loadModule(k, loader)
     .then((mod) => {
       const model = pickBuilder(mod, k)()
       cache.set(k, model)
@@ -142,12 +155,12 @@ export async function loadStageModel(speciesId: string, stage: LifeStage): Promi
   return task
 }
 
-/** 预热：用户把生活史那张卡片划进视野时，提前把整条路线的 chunk 拉下来 */
+/** 预热整条路线的模块；不构建几何，也不把未展示的阶段放进模型缓存。 */
 export function prefetchStages(speciesId: string): void {
   for (const stage of builtStagesOf(speciesId)) {
     const k = key(speciesId, stage)
     if (cache.has(k) || inflight.has(k)) continue
-    void loadStageModel(speciesId, stage).catch(() => {
+    void loadModule(k, LOADERS[k]).catch(() => {
       /* 预热失败无所谓，真正打开时会再试一次并显示错误 */
     })
   }

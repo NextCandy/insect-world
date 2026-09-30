@@ -15,10 +15,13 @@ import { INSECTS } from '../../data/insects.zh'
 import { Stage } from '../Stage'
 
 const h = vi.hoisted(() => ({
+  loadModel: vi.fn(() => Promise.resolve(null)),
   webglOk: false,
   throwOnRender: false,
   lossCb: undefined as ((lost: boolean) => void) | undefined,
 }))
+
+vi.mock('../../three/registry', () => ({ loadInsectModel: h.loadModel }))
 
 vi.mock('../../three/webgl', () => ({
   webglAvailable: () => h.webglOk,
@@ -53,6 +56,7 @@ afterEach(() => {
   h.webglOk = false
   h.throwOnRender = false
   h.lossCb = undefined
+  h.loadModel.mockClear()
 })
 
 function mount() {
@@ -60,6 +64,18 @@ function mount() {
     <Stage insect={ladybird} compareWith={null} onCompareToggle={vi.fn()} onCompareCycle={vi.fn()} />,
   )
 }
+
+describe('首屏模型预热', () => {
+  it('只提前构建当前实际展示的模型，WebGL 不可用时跳过', () => {
+    h.webglOk = false
+    mount()
+    expect(h.loadModel).not.toHaveBeenCalled()
+    cleanup()
+    h.webglOk = true
+    mount()
+    expect(h.loadModel).toHaveBeenCalledExactlyOnceWith(ladybird.id)
+  })
+})
 
 describe('WebGL 建不起来：剪影兜底', () => {
   it('摆物种剪影和一句说明，不挂 canvas', () => {

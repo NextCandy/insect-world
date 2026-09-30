@@ -82,9 +82,11 @@ export function FeedbackForm({
       ? t('feedback.err.rate')
       : status === 'invalid'
         ? t('feedback.err.invalid')
-        : status === 'net'
-          ? t('feedback.err.net')
-          : null
+        : status === 'timeout'
+          ? t('feedback.err.timeout')
+          : status === 'net'
+            ? t('feedback.err.net')
+            : null
 
   return (
     <div className={s.form}>

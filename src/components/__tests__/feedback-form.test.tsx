@@ -12,7 +12,7 @@
  * 3. **限流与校验各说各的话** —— 全都提示「发送失败」的话，被限流的人会
  *    一直重试。
  */
-import { cleanup, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { renderZh } from '../../i18n/testing'
@@ -115,4 +115,26 @@ describe('纠错对话框带上下文', () => {
     expect(body.species).toBe('monarch-butterfly')
     expect(body.part).toBe(null)
   })
+})
+
+
+it('等待超时后显示提示、保留正文和邮箱，并允许重试', async () => {
+  vi.useFakeTimers()
+  stubFetch(() => new Promise<Response>(() => {}))
+  try {
+    renderZh(<FeedbackForm kind="note" placeholder="说点什么" />)
+    const text = screen.getByPlaceholderText('说点什么') as HTMLTextAreaElement
+    const email = screen.getByRole('textbox', { name: '邮箱' }) as HTMLInputElement
+    fireEvent.change(text, { target: { value: '这段文字不能丢' } })
+    fireEvent.change(email, { target: { value: 'reader@example.org' } })
+    fireEvent.click(screen.getByRole('button', { name: '发送' }))
+    await act(async () => { await vi.advanceTimersByTimeAsync(15000) })
+    expect(screen.getByRole('status').textContent).toContain('等待回复超时')
+    expect(text.value).toBe('这段文字不能丢')
+    expect(email.value).toBe('reader@example.org')
+    expect(screen.getByRole('button', { name: '发送' }).hasAttribute('disabled')).toBe(false)
+  } finally {
+    cleanup()
+    vi.useRealTimers()
+  }
 })

@@ -2,7 +2,7 @@ import { Component, useCallback, useEffect, useRef, useState, type ReactNode } f
 import type { Insect } from '../data/types'
 import { metamorphosisOf, prefetchStages, type LifeStage } from '../three/stages'
 import { InsectCanvas, type ViewMode } from '../three/InsectCanvas'
-import { prefetchInsectModel } from '../three/registry'
+import { loadInsectModel } from '../three/registry'
 import { webglAvailable } from '../three/webgl'
 import { EVENTS, track, type StageTool } from '../analytics'
 import { pmark } from '../perf'
@@ -123,7 +123,9 @@ export function Stage({
    * registry 自带按 id 去重与在途合并，稍后 Scene 再要同一只虫拿到的是同一个 promise。
    */
   useState(() => {
-    if (!webglDead) prefetchInsectModel(insect.id)
+    if (!webglDead) void loadInsectModel(insect.id).catch(() => {
+      // Scene 会报告加载失败；这里仅提前启动当前实际展示的模型。
+    })
     return null
   })
 

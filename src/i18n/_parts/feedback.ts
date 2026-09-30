@@ -30,6 +30,7 @@ export const PART = definePart(
     'feedback.err.invalid': '有个地方填得不对，检查一下再发。',
     'feedback.err.rate': '今天发得有点多了，明天再来吧。',
     'feedback.err.net': '没发出去。回头再试一次。',
+    'feedback.err.timeout': '等待回复超时，内容已保留。请稍后再试。',
   },
   {
     'photo.credit': 'Photo by {name}',
@@ -56,5 +57,6 @@ export const PART = definePart(
     'feedback.err.invalid': 'Something in the form looks off. Check it and try again.',
     'feedback.err.rate': "You've sent a few already today. Try again tomorrow.",
     'feedback.err.net': "Couldn't send it. Try again later.",
+    'feedback.err.timeout': 'The response timed out. Your text is still here; please try again later.',
   },
 )

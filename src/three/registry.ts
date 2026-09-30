@@ -43,14 +43,27 @@ const LOADERS: Record<string, Loader> = Object.fromEntries(
  *
  * 原先只进不出：逐只翻完 50 种（方向键就是这么用的），50 套几何体全部
  * 留在显存里，每套约 2~3MB —— 桌面机无所谓，手机上是白占一百多兆。
- * 上限取 12：当前那只、对比对象、hover 预热的邻居都稳稳落在「最近用过」里，
- * 正在渲染的模型绝不会被清（它必然是最新触碰的）。
+ * 上限取 12，保留最近真正加载过的模型；hover 预取只拉模块，不占模型缓存。
+ * 这里尚未对活跃引用计数，大量真实加载仍可能逐出展示/离场中的旧模型。
  * 逐出时要手动 dispose —— three.js 的几何体与材质握着 GPU 资源，
  * 不 dispose 只断引用，显存照样占着。
  */
 const MAX_LIVE = 12
 const cache = new Map<string, InsectModel>()
 const inflight = new Map<string, Promise<InsectModel>>()
+// 模块预取与真正加载共享任务；成功模块可复用，失败请求必须允许重试。
+const modules = new Map<string, Promise<Record<string, unknown>>>()
+
+function loadModule(id: string, loader: Loader): Promise<Record<string, unknown>> {
+  const pending = modules.get(id)
+  if (pending) return pending
+  const task = loader().catch((err) => {
+    modules.delete(id)
+    throw err
+  })
+  modules.set(id, task)
+  return task
+}
 
 /** Map 按插入序遍历；重新插入 = 挪到队尾（最近使用） */
 function touch(id: string, model: InsectModel): void {
@@ -125,7 +138,7 @@ export async function loadInsectModel(id: string): Promise<InsectModel> {
   if (!loader) throw new Error(`未注册的物种：${id}`)
 
   // 两段分开计时：chunk 下载+求值 vs builder 真正构建几何（默认关闭，见 src/perf.ts）
-  const task = ptrack(`chunk:${id}`, loader())
+  const task = ptrack(`chunk:${id}`, loadModule(id, loader))
     .then((mod) => {
       const model = pspan(`build:${id}`, () => pickBuilder(mod)())
       cache.set(id, model)
@@ -142,10 +155,11 @@ export async function loadInsectModel(id: string): Promise<InsectModel> {
   return task
 }
 
-/** 预热：鼠标悬停在图鉴列表项上时提前把 chunk 拉下来 */
+/** 预热只拉取模块；真正选中时才构建模型，不让悬停触发 LRU 逐出。 */
 export function prefetchInsectModel(id: string): void {
-  if (cache.has(id) || inflight.has(id) || !LOADERS[id]) return
-  void loadInsectModel(id).catch(() => {
+  const loader = LOADERS[id]
+  if (cache.has(id) || inflight.has(id) || !loader) return
+  void loadModule(id, loader).catch(() => {
     /* 预热失败无所谓，真正选中时会再试一次并显示错误 */
   })
 }

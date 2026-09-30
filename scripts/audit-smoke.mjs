@@ -86,7 +86,32 @@ try {
     await blocked.close()
     checks++
   }
-  console.log(`✓ 浏览器回归 ${checks} 个场景通过（窄屏布局、换虫、存储故障）`)
+  // 来源证据范围、中英文窄屏，以及未确认收件时保留反馈草稿。
+  for (const [path, heading] of [['/', '来源与核校'], ['/en/', 'Sources and checks']]) {
+    const sourcePage = await testPage({ viewport: { width: 320, height: 844 } })
+    await sourcePage.goto(`${base}${path}`)
+    const sources = sourcePage.getByRole('region', { name: heading })
+    await sources.scrollIntoViewIfNeeded()
+    assert.equal(await sources.getByRole('link').count(), 3)
+    assert.ok((await sources.textContent()).includes('2026-09-30'))
+    assert.equal(await sourcePage.evaluate(() => document.documentElement.scrollWidth > innerWidth), false)
+    await sourcePage.close()
+    checks++
+  }
+  const draftPage = await testPage()
+  await draftPage.route('**/api/feedback', route => route.fulfill({ status: 200, contentType: 'text/html', body: '<html>fallback</html>' }))
+  await draftPage.goto(base)
+  await draftPage.locator('button[class*="reportError"]').click()
+  const dialog = draftPage.getByRole('dialog')
+  const text = dialog.locator('textarea')
+  await text.fill('这段反馈需要保留')
+  await dialog.getByRole('button', { name: '发送', exact: true }).click()
+  await dialog.getByRole('status').waitFor()
+  assert.equal(await text.inputValue(), '这段反馈需要保留')
+  assert.equal(await dialog.getByRole('button', { name: '发送', exact: true }).isEnabled(), true)
+  await draftPage.close()
+  checks++
+  console.log(`✓ 浏览器回归 ${checks} 个场景通过（窄屏布局、换虫、存储故障、来源与反馈草稿）`)
 } finally {
   try { await browser?.close() } finally { server.kill('SIGTERM') }
 }

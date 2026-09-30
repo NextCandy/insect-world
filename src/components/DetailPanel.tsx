@@ -21,6 +21,7 @@ import { canonicalPath } from '../i18n/hrefForLocale'
 import { photoUrl } from '../data/external'
 import { photoOf } from '../data/photos'
 import { SpeciesPhoto } from './SpeciesPhoto'
+import { ContentSources } from './ContentSources'
 import { pinyinOf } from '../data/pinyin'
 import { EVENTS, track } from '../analytics'
 
@@ -274,6 +275,8 @@ export function DetailPanel({
         README 里那句「AI 撰写未核校」是这个站被拿去上课的硬门槛
         （issue #3 那位老师就卡在这儿）。这个入口是把访客变成校对的那条路。
       */}
+      <ContentSources insectId={insect.id} />
+
       <button className={s.reportError} onClick={onReportError}>
         {t('feedback.correction.open')}
       </button>
