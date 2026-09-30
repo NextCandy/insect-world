@@ -15,7 +15,7 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
 
@@ -45,7 +45,9 @@ jobs:
         run: npm run build
 
       - name: 安装浏览器
-        run: npx playwright install --with-deps chromium
+        # 托管镜像已有 Chromium 的系统库，只下载本项目版本的无头浏览器。
+        # --with-deps 会额外 apt update，并被镜像中无关的微软源 403 阻断。
+        run: npx playwright install --only-shell chromium
 
       - name: 浏览器回归
         run: npm run test:browser
