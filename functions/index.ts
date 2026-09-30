@@ -73,19 +73,20 @@ export const onRequestGet = async ({ request, next }: PagesFunctionContext): Pro
       status: 302,
       headers: {
         Location: '/en/',
-        // 响应内容随 Accept-Language 变化，必须声明 Vary，否则 CDN /
-        // 中间代理可能把某一种语言的响应缓存下来发给所有人。
-        Vary: 'Accept-Language',
+        // 分流同时依赖语言、明确选择的 cookie 与爬虫身份。
+        Vary: 'Accept-Language, Cookie, User-Agent',
+        'Cache-Control': 'private, no-store',
       },
     })
   }
 
   // 不分流：把请求交回静态资源管线（会经过 public/_headers 里的安全头、
-  // 缓存策略），只在返回前补一个 Vary —— 这份 "/" 的 200 响应同样是按
-  // Accept-Language 算出来的（只是算出的结果是"不跳转"），下游缓存如果
-  // 不知道这一点，可能把这份中文响应缓给下一个本该被分流的英文访客。
+  // 缓存策略）。根响应依赖访客偏好，禁止缓存，并保留静态管线已有的 Vary。
   const resp = await next()
   const withVary = new Response(resp.body, resp)
-  withVary.headers.set('Vary', 'Accept-Language')
+  const vary = new Set((resp.headers.get('Vary') ?? '').split(',').map((v) => v.trim()).filter(Boolean))
+  for (const name of ['Accept-Language', 'Cookie', 'User-Agent']) vary.add(name)
+  withVary.headers.set('Vary', [...vary].join(', '))
+  withVary.headers.set('Cache-Control', 'private, no-store')
   return withVary
 }

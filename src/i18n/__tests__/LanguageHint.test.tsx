@@ -7,7 +7,7 @@
  * 之后再回首页又被弹去英文，体验上等于选择没生效。
  */
 import { cleanup, fireEvent, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { LanguageHint } from '../LanguageHint'
 import { LOCALE_COOKIE_NAME } from '../edgeLocale'
 import { renderEn, renderZh } from '../testing'
@@ -71,4 +71,19 @@ describe('浏览器语言与当前页一致：提示条不出现', () => {
 
     expect(screen.queryByRole('note')).toBeNull()
   })
+})
+
+
+it('存储写入被拒绝时，仍能关闭语言提示条', () => {
+  stubBrowserLanguage('en-US')
+  renderZh(<LanguageHint speciesId="ladybird" />)
+  const deny = vi.spyOn(Object.getPrototypeOf(localStorage), 'setItem').mockImplementation(() => {
+    throw new DOMException('Storage blocked', 'SecurityError')
+  })
+  try {
+    fireEvent.click(screen.getByLabelText('Dismiss'))
+    expect(screen.queryByRole('note')).toBeNull()
+  } finally {
+    deny.mockRestore()
+  }
 })

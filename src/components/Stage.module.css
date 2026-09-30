@@ -333,6 +333,7 @@
   /* 交给上面那个 flex 排，子块不再各自绝对定位 */
   .identity > * {
     position: static;
+    max-width: 100%;
   }
 
   .captionName {
@@ -417,5 +418,19 @@
     top: 12px;
     padding: 6px 10px;
     font-size: 12px;
+  }
+}
+
+/* 手机身份区为入口预留了 62px，入口必须收成 44px 的触控按钮。 */
+@media (max-width: 640px) {
+  .lifeCue {
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .lifeCueLabel {
+    display: none;
   }
 }

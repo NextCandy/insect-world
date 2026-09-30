@@ -97,13 +97,20 @@ export default function App() {
       首帧前的 data-theme 由 public/theme-boot.js 先行设好（防闪变），
       这里读同一份键接管后续切换 —— 判定逻辑在 src/theme.ts，两边共用。 */
   const [theme, setTheme] = useState<Theme>(() => {
-    const saved = typeof localStorage !== 'undefined' ? localStorage.getItem(THEME_KEY) : null
-    return resolveTheme(saved)
+    try {
+      return resolveTheme(localStorage.getItem(THEME_KEY))
+    } catch {
+      return resolveTheme(null)
+    }
   })
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme
-    localStorage.setItem(THEME_KEY, theme)
+    try {
+      localStorage.setItem(THEME_KEY, theme)
+    } catch {
+      // 存储被禁用或已满时，主题仍在本次会话内生效。
+    }
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', THEME_COLOR[theme])
   }, [theme])
 
@@ -346,9 +353,11 @@ export default function App() {
   }, [activeId, compareId, pickPeer])
 
   const surprise = useCallback(() => {
-    // 用当前索引推进而非 Math.random：连点两次不会撞回同一只
+    if (SPECIES.length < 2) return
+    // 随机偏移只取 1..n-1，既能遇见所有其它物种，也不会选回当前这只。
     const idx = SPECIES.findIndex((i) => i.id === activeId)
-    select(SPECIES[(idx * 5 + 3) % SPECIES.length].id)
+    const offset = 1 + Math.floor(Math.random() * (SPECIES.length - 1))
+    select(SPECIES[(idx + offset) % SPECIES.length].id)
   }, [activeId, select, SPECIES])
 
   return (

@@ -264,9 +264,10 @@ export function Stage({
           onMouseEnter={() => prefetchStages(insect.id)}
           onFocus={() => prefetchStages(insect.id)}
           aria-label={t('stage.lifeCueAria', { name: insect.name, n: lifeRoute.length })}
+          title={t('stage.lifeCueAria', { name: insect.name, n: lifeRoute.length })}
         >
           <IconPlay size={14} />
-          {t('stage.lifeCue', { n: lifeRoute.length })}
+          <span className={s.lifeCueLabel}>{t('stage.lifeCue', { n: lifeRoute.length })}</span>
         </button>
       )}
 

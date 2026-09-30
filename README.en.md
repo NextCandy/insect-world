@@ -48,18 +48,22 @@ The trade-off is realism: this will not match a 3D scan. What it buys is zero as
 
 ## Quick start
 
+Requires Node.js 22.13 or newer; API tests use Node's built-in SQLite.
+
 ```bash
 npm install
 npm run dev          # main site    http://localhost:5178
                      # model bench  http://localhost:5178/preview.html
 npm test             # 4,000+ tests
 npm run build        # tsc --noEmit + vite build
+npx playwright install chromium # before the first browser check
+npm run test:browser # after building: mobile layout, switching, blocked storage
 npm run deploy       # build and publish to Cloudflare Pages (run npx wrangler login first)
 ```
 
-Hosted as a static site on Cloudflare Pages, with no backend. `public/_headers` sets the caching policy: build outputs carry content hashes and are cached immutably for a year, while HTML is revalidated on every request so a new release takes effect immediately.
+Pages are hosted statically on Cloudflare Pages; language routing and feedback submission use Pages Functions, with feedback stored in D1. `public/_headers` sets the caching policy: build outputs carry content hashes and are cached immutably for a year, while HTML is revalidated on every request so a new release takes effect immediately.
 
-The root path `/` also carries a Cloudflare Pages Function (`functions/index.ts`): it 302-redirects visitors whose `Accept-Language` has no Chinese tag to `/en/` (crawlers, and visitors with an existing language-choice cookie, are left alone; the response carries `Vary: Accept-Language`). `functions/` lives at the repo root, not inside `dist/`, but **the `deploy` command above needs no change** — `wrangler pages deploy` resolves its functions directory as "the current working directory at invocation time, plus `functions`", independent of the deployed directory argument (`dist`), confirmed by reading wrangler 4.x's own source (`deploy2()`'s `functionsDirectory = customFunctionsDirectory || path.join(process.cwd(), "functions")`), not assumed from docs. `npm run deploy` runs from the repo root, so it is auto-discovered and bundled in. Locally, `npx wrangler pages dev dist` plus `curl`ing `/` with different `Accept-Language`/`Cookie` headers reproduces the whole chain.
+The root path `/` also carries a Cloudflare Pages Function (`functions/index.ts`): it 302-redirects visitors whose `Accept-Language` has no Chinese tag to `/en/` (crawlers are left alone, and an existing language-choice cookie takes precedence; the response carries `Vary: Accept-Language, Cookie, User-Agent` and `Cache-Control: private, no-store`). `functions/` lives at the repo root, not inside `dist/`, but **the `deploy` command above needs no change** — `wrangler pages deploy` resolves its functions directory as "the current working directory at invocation time, plus `functions`", independent of the deployed directory argument (`dist`), confirmed by reading wrangler 4.x's own source (`deploy2()`'s `functionsDirectory = customFunctionsDirectory || path.join(process.cwd(), "functions")`), not assumed from docs. `npm run deploy` runs from the repo root, so it is auto-discovered and bundled in. Locally, `npx wrangler pages dev dist` plus `curl`ing `/` with different `Accept-Language`/`Cookie` headers reproduces the whole chain.
 
 ## How to use it
 

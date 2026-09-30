@@ -1,4 +1,4 @@
-import { hashIp, isRateLimited, validateSubmission } from '../../src/feedback/rules'
+import { DAILY_SUBMISSION_LIMIT, hashIp, validateSubmission } from '../../src/feedback/rules'
 import { clientIp, guard, json, readJson, type EdgeContext } from '../../src/feedback/edge'
 import type { RawSubmission } from '../../src/feedback/types'
 
@@ -29,23 +29,19 @@ export const onRequestPost = async ({ request, env }: EdgeContext): Promise<Resp
     const now = new Date()
     const ipHash = await hashIp(salt, clientIp(request), now)
 
-    // ip_hash 里已经拌进了日期（见 rules.ts 的 ipHashInput），所以「这个哈希
-    // 一共出现过几次」就精确等于「这个 IP 今天提交过几次」—— 不需要再按时间戳
-    // 划窗口，也就不会有窗口边界的差一错误
-    const seen = await db
-      .prepare('SELECT COUNT(*) AS n FROM messages WHERE ip_hash = ?')
-      .bind(ipHash)
-      .first<{ n: number }>()
-    if (isRateLimited(seen?.n ?? 0)) return json({ ok: false, error: 'rate-limited' }, 429)
-
+    // 计数和写入在同一条 SQL 内完成：先 SELECT 再 INSERT 会让并发请求
+    // 同时看到剩余额度、各自写入。ip_hash 含 UTC 日期，天然就是每日窗口。
     const v = verdict.value
-    await db
+    const result = await db
       .prepare(
         `INSERT INTO messages (created_at, kind, species, part, body, email, locale, ip_hash, status)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'new')`,
+         SELECT ?, ?, ?, ?, ?, ?, ?, ?, 'new'
+         WHERE (SELECT COUNT(*) FROM messages WHERE ip_hash = ?) < ?`,
       )
-      .bind(now.getTime(), v.kind, v.species, v.part, v.body, v.email, v.locale, ipHash)
+      .bind(now.getTime(), v.kind, v.species, v.part, v.body, v.email, v.locale, ipHash, ipHash, DAILY_SUBMISSION_LIMIT)
       .run()
+    if (result.meta?.changes === 0) return json({ ok: false, error: 'rate-limited' }, 429)
+    if (result.meta?.changes !== 1) throw new Error('Unexpected feedback insert result')
 
     return json({ ok: true })
   })

@@ -40,12 +40,16 @@
 
 ## 跑起来
 
+需要 Node.js 22.13 或更新版本（与 CI 的 Node 22 一致；接口测试使用内置 SQLite）。
+
 ```bash
 npm install
 npm run dev          # 主站      http://localhost:5178
                      # 模型调试台 http://localhost:5178/preview.html
 npm test             # 4000 多个测试
 npm run build        # tsc --noEmit + vite build
+npx playwright install chromium # 首次运行浏览器检查前安装
+npm run test:browser # 构建产物的手机布局、换虫、存储故障回归
 npm run deploy       # 构建并发布到 Cloudflare Pages（需先 npx wrangler login）
 ```
 
@@ -57,12 +61,11 @@ node scripts/shots.mjs           # 重拍 README 截图（无头 Chromium，用�
 node scripts/perf-firstframe.mjs # 首帧分段计时（配合 ?perf=1 的打点通道，见 docs/perf-notes.md）
 ```
 
-部署在 Cloudflare Pages，静态托管，无后端。`public/_headers` 配了缓存策略：
+页面由 Cloudflare Pages 静态托管；语言分流与纠错提交使用 Pages Functions，反馈存入 D1。`public/_headers` 配了缓存策略：
 产物文件名带内容哈希，按一年不可变缓存；HTML 每次回源校验，保证发新版立刻生效。
 
 根路径 `/` 另外挂了一个 Cloudflare Pages Function（`functions/index.ts`）：按
-`Accept-Language` 把没有中文语言标签的访客 302 到 `/en/`（爬虫与已有语言选择
-cookie 的访客不动，响应带 `Vary: Accept-Language`）。`functions/` 目录在仓库根、
+`Accept-Language` 把没有中文语言标签的访客 302 到 `/en/`（爬虫不分流，已有语言选择 cookie 时尊重该选择，根路径响应带 `Vary: Accept-Language, Cookie, User-Agent` 与 `Cache-Control: private, no-store`）。`functions/` 目录在仓库根、
 不在 `dist/` 里，但**不需要改上面这条 `deploy` 命令**——`wrangler pages deploy`
 的 functions 目录默认是「执行命令那一刻的当前工作目录 + `functions`」，跟被部署
 的目录参数（这里是 `dist`）无关（读的是 wrangler 4.x 源码里 `deploy2()` 的

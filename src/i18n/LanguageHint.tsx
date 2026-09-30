@@ -36,7 +36,11 @@ export function LanguageHint({ speciesId }: { speciesId: string }) {
   const [show, setShow] = useState(false)
 
   useEffect(() => {
-    if (localStorage.getItem(DISMISS_KEY) === '1') return
+    try {
+      if (localStorage.getItem(DISMISS_KEY) === '1') return
+    } catch {
+      // 存储不可用时仍按浏览器语言展示提示；关闭在本次会话内生效。
+    }
     const prefersZh = navigator.language?.toLowerCase().startsWith('zh') ?? false
     // 中文页遇到非中文浏览器，或英文页遇到中文浏览器，才提示
     setShow(locale === 'zh' ? !prefersZh : prefersZh)
@@ -68,7 +72,11 @@ export function LanguageHint({ speciesId }: { speciesId: string }) {
       <button
         className={s.close}
         onClick={() => {
-          localStorage.setItem(DISMISS_KEY, '1')
+          try {
+            localStorage.setItem(DISMISS_KEY, '1')
+          } catch {
+            // 持久化失败不能挡住关闭动作。
+          }
           setShow(false)
         }}
         aria-label={locale === 'zh' ? 'Dismiss' : '关闭'}

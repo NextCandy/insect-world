@@ -151,3 +151,37 @@ describe('点播墙已撤（2026-09-23）', () => {
     expect(document.querySelector('footer button')).toBeNull()
   })
 })
+
+
+describe('审核回归：主题存储与随机切换', () => {
+  it.each([0, 15 / 63, 0.999999])('随机数 %s 时第 16 个物种点击「换一只看看」后确实换虫', (random) => {
+    vi.spyOn(Math, 'random').mockReturnValue(random)
+    history.replaceState(null, '', `/s/${INSECTS[15].id}/`)
+    renderZh(<App />)
+    const before = document.title
+    fireEvent.click(screen.getByTitle('换一只看看'))
+    expect(document.title).not.toBe(before)
+    vi.restoreAllMocks()
+  })
+
+  it.each(['getter', 'read', 'write'] as const)('localStorage %s 被拒绝时仍可浏览和切换主题', (failure) => {
+    const original = Object.getOwnPropertyDescriptor(globalThis, 'localStorage')!
+    const storage = localStorage
+    const denied = () => { throw new DOMException('Storage blocked', 'SecurityError') }
+    if (failure === 'getter') {
+      Object.defineProperty(globalThis, 'localStorage', { configurable: true, get: denied })
+    } else {
+      vi.spyOn(Object.getPrototypeOf(storage), failure === 'read' ? 'getItem' : 'setItem').mockImplementation(denied)
+    }
+    try {
+      renderZh(<App />)
+      fireEvent.click(screen.getByLabelText('切换到深色主题'))
+      expect(document.documentElement.dataset.theme).toBe('dark')
+      expect(screen.getByLabelText('切换到浅色主题')).toBeTruthy()
+    } finally {
+      cleanup()
+      vi.restoreAllMocks()
+      Object.defineProperty(globalThis, 'localStorage', original)
+    }
+  })
+})
