@@ -112,7 +112,7 @@ try {
   await draftPage.close()
   checks++
   // 在实际R3F场景中持有模型，加载压力不得逐出正在展示的成虫/卵。
-  const cachePage = await testPage({ viewport: { width: 1440, height: 1000 } })
+  const cachePage = await testPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true })
   await cachePage.goto(`${base}/?perf=1`)
   await cachePage.waitForFunction(() => window.__perf?.firstFrame != null)
   await cachePage.evaluate(async () => {
@@ -176,11 +176,14 @@ try {
     return { stages: pairs.length, cache: debug.stageCacheStats().size, geometryBytes: sizes, activeDisposals: disposals }
   })
   console.log('✓ 模型缓存压力检查', JSON.stringify(cacheEvidence))
-  await cachePage.getByRole('button', { name: /下一步/ }).click()
-  await cachePage.getByRole('button', { name: /下一步/ }).click()
-  await cachePage.getByRole('button', { name: /下一步/ }).click()
-  await cachePage.getByRole('button', { name: /看完了/ }).click()
-  await cachePage.waitForFunction(() => window.__perf.marks.filter(mark => mark.name === 'model-committed').length >= 3)
+  // 此交互不导航；每一步以实际模型提交为完成条件。
+  for (let step = 0; step < 3; step++) {
+    const committed = await cachePage.evaluate(() => window.__perf.marks.filter(mark => mark.name === 'model-committed').length)
+    await cachePage.getByRole('button', { name: /下一步/ }).click({ noWaitAfter: true })
+    await cachePage.waitForFunction(count => window.__perf.marks.filter(mark => mark.name === 'model-committed').length > count, committed, { timeout: 30000 })
+  }
+  await cachePage.getByRole('button', { name: /看完了/ }).click({ noWaitAfter: true })
+  await cachePage.getByRole('button', { name: /看完了/ }).waitFor({ state: 'hidden' })
   await cachePage.close()
   checks++
   const previewPage = await testPage({ viewport: { width: 1440, height: 1000 } })
