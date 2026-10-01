@@ -94,6 +94,8 @@ try {
     ['/en/s/ladybird/', 'Sources and checks', 4, '2026-10-01', 'Abstract read; full text not read'],
     ['/s/honeybee/', '来源与核校', 3, '2026-10-01', null],
     ['/en/s/honeybee/', 'Sources and checks', 3, '2026-10-01', null],
+    ['/s/mantis/', '来源与核校', 2, '2026-10-01', null],
+    ['/en/s/mantis/', 'Sources and checks', 2, '2026-10-01', null],
   ]) {
     const sourcePage = await testPage({ viewport: { width: 320, height: 844 } })
     await sourcePage.goto(`${base}${path}`)

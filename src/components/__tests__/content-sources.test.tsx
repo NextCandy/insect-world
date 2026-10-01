@@ -10,6 +10,26 @@ const props = { onCompare: () => {}, onDiscover: () => {}, onReportError: () => 
 afterEach(cleanup)
 
 describe('detail source evidence', () => {
+  it('shows mantis evidence with named claim scopes instead of whole-species verification', () => {
+    renderZh(<DetailPanel insect={zhInsects.find(insect => insect.id === 'mantis')!} {...props} />)
+    const section = screen.getByRole('region', { name: '来源与核校' })
+    expect(within(section).getAllByRole('link').map(link => link.getAttribute('href'))).toEqual([
+      'https://content.ces.ncsu.edu/chinese-mantid',
+      'https://www.unibas.ch/dam/jcr:8c1649d3-ba69-4907-b84b-e7f84d765a4c/Artikel%20Wilson%20Journal%20of%20Ornithology.pdf',
+    ])
+    expect(section.textContent).toContain('捕捉前足与卵鞘越冬')
+    expect(section.textContent).toContain('美国东部引入种群与捕鸟记录')
+    expect(section.textContent).toContain('非专家复审')
+  })
+  it('localizes the mantis scopes and preserves the incomplete-check notice', () => {
+    renderEn(<DetailPanel insect={enInsects.find(insect => insect.id === 'mantis')!} {...props} />)
+    const section = screen.getByRole('region', { name: 'Sources and checks' })
+    expect(within(section).getAllByRole('link')).toHaveLength(2)
+    expect(section.textContent).toContain('Grasping forelegs and overwintering eggs in oothecae')
+    expect(section.textContent).toContain('Introduced eastern US populations and bird-capture records')
+    expect(section.textContent).toContain('No expert review')
+    expect(section.textContent).not.toMatch(/[一-鿿]/)
+  })
   it('shows scoped honeybee evidence for stinging, dance coding and winter clustering', () => {
     renderZh(<DetailPanel insect={zhInsects.find(insect => insect.id === 'honeybee')!} {...props} />)
     const section = screen.getByRole('region', { name: '来源与核校' })

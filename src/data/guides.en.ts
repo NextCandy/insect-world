@@ -212,12 +212,12 @@ export const GUIDES: Record<string, Guide> = {
     lesson: [
       {
         title: "How Raptorial Forelegs Lock Prey",
-        body: "The forelegs are sickle-shaped structures lined with sharp spines (raptorial forelegs); at rest they fold against the chest. Prey that nears triggers an instant snap, spines interlocking to pin it.",
+        body: "The grasping forelegs bear rows of spines. They often fold against the thorax while the mantis waits for prey; these structures help capture prey but do not make every strike a success.",
         anchor: 'raptorialLeg',
       },
       {
-        title: "How the Prothorax Assists the Strike",
-        body: "The elongated prothorax, the thorax's front section, can suddenly extend like a telescoping rod, carrying the forelegs to strike from a distance prey never expects—key to the mantis's high hit rate.",
+        title: "The Folded Foreleg Posture",
+        body: "Observe the forelegs near the slender prothorax: they often fold against the chest, giving the mantis its praying posture. Grasping is performed by the forelegs, rather than a telescoping chest.",
         anchor: 'prothorax',
       },
       {
@@ -227,29 +227,29 @@ export const GUIDES: Record<string, Guide> = {
       },
       {
         title: "A Green Ambusher in Disguise",
-        body: "Its body is usually green or brown, sitting motionless among shrubs or grass, blending in and winning by camouflage, not speed. It never chases prey, waiting until a target nears—a textbook ambush predator.",
+        body: "The body may be green or brown, and the mantis often waits for prey among vegetation. A similar background can help conceal it; waiting for prey does not mean it never moves or always succeeds.",
       },
     ],
     motion: {
-      title: "One Strike Decides It",
-      body: "The mantis waits motionless until prey enters range, then the prothorax extends as forelegs snap out—strike to lock takes under a tenth of a second, too fast to see. A strike cannot be recalled, so it waits rather than risk it.",
+      title: "Waiting and Grasping Prey",
+      body: "The Chinese mantis often waits for prey and grasps it with its forelegs. Spines help hold prey, but capture is not guaranteed. This describes hunting; the model’s idle movement does not recreate a complete capture.",
     },
     quiz: [
       {
         question: "When a mantis hunts, what is the main purpose of its forelegs closing?",
-        options: ["Injecting venom to paralyze the prey", "Using rows of spines to lock the prey so it cannot escape", "Cutting the prey through like a pair of scissors"],
+        options: ["Injecting venom to paralyze the prey", "Using specialized forelegs and spines to help grasp prey", "Cutting the prey through like a pair of scissors"],
         answer: 1,
-        explain: "A mantis's forelegs are raptorial legs lined with spines; striking locks the prey in place. It carries no venom and does not cut prey apart.",
+        explain: "The specialized forelegs and their spines help grasp prey. Their function does not establish that prey can never escape or every strike succeeds.",
       },
       {
         question: "Which of the following is true about this mantis species in North America?",
         options: [
           "It failed to adapt to the local climate and vanished soon after introduction",
-          "Introduced as a pest predator, it became widely naturalized, with wild records of it ambushing hummingbirds",
+          "Introduced populations are established in the eastern US, with records of hummingbird capture",
           "It survives only in artificial greenhouse conditions and never established in the wild",
         ],
         answer: 1,
-        explain: "Introduced to North America in 1896 as a pest predator, it naturalized quickly; wild records show it occasionally ambushes hummingbirds far larger.",
+        explain: "The study documents established eastern US populations and hummingbird captures; records alone do not reveal the share of birds in its diet.",
       },
     ],
     habitat: {

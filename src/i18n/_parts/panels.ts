@@ -9,6 +9,10 @@ import { definePart } from './part'
 export const PART = definePart(
   {
     'sources.title': '来源与核校',
+    'sources.ncMantisTitle': '北卡罗来纳州立大学：中华大刀螳资料',
+    'sources.mantisBirdTitle': '2017年螳螂捕鸟记录研究（PDF）',
+    'sources.mantisForelegsEggs': '捕捉前足与卵鞘越冬',
+    'sources.mantisBirdRecords': '美国东部引入种群与捕鸟记录',
     'sources.ufBeeTitle': '佛罗里达大学 IFAS：西方蜜蜂物种资料',
     'sources.waggleTitle': '2019年摆尾舞神经行为学综述',
     'sources.psuWinterTitle': '宾夕法尼亚州立大学：蜜蜂越冬研究报道',
@@ -65,6 +69,10 @@ export const PART = definePart(
   },
   {
     'sources.title': 'Sources and checks',
+    'sources.ncMantisTitle': 'NC State University: Chinese praying mantid profile',
+    'sources.mantisBirdTitle': '2017 study of bird-capture records by mantises (PDF)',
+    'sources.mantisForelegsEggs': 'Grasping forelegs and overwintering eggs in oothecae',
+    'sources.mantisBirdRecords': 'Introduced eastern US populations and bird-capture records',
     'sources.ufBeeTitle': 'University of Florida IFAS: western honey bee profile',
     'sources.waggleTitle': '2019 review of waggle dance neuroethology',
     'sources.psuWinterTitle': 'Penn State University: report on honey bee winter survival',

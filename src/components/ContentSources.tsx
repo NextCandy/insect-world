@@ -15,6 +15,8 @@ const claimKeys = {
   'bee-stinging': 'sources.beeStinging',
   'waggle-run-coding': 'sources.waggleCoding',
   'winter-clustering': 'sources.winterClustering',
+  'mantis-forelegs-and-eggs': 'sources.mantisForelegsEggs',
+  'mantis-us-bird-records': 'sources.mantisBirdRecords',
 } as const satisfies Record<ContentClaim, string>
 
 const accessKeys = {

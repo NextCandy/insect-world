@@ -11,6 +11,8 @@ export type ContentClaim =
   | 'bee-stinging'
   | 'waggle-run-coding'
   | 'winter-clustering'
+  | 'mantis-forelegs-and-eggs'
+  | 'mantis-us-bird-records'
 
 export interface ContentSource {
   id: string
@@ -18,12 +20,31 @@ export interface ContentSource {
   titleKey: 'sources.envTitle' | 'sources.zooTitle' | 'sources.combatTitle'
     | 'sources.ncLadybirdTitle' | 'sources.cornellLadybirdTitle' | 'sources.adwLadybirdTitle' | 'sources.bleedingTitle'
     | 'sources.ufBeeTitle' | 'sources.waggleTitle' | 'sources.psuWinterTitle'
+    | 'sources.ncMantisTitle' | 'sources.mantisBirdTitle'
   supports: readonly ContentClaim[]
   access: 'full-text' | 'official-page' | 'abstract'
   checkedAt: string
 }
 
 export const CONTENT_SOURCES: Readonly<Record<string, readonly ContentSource[]>> = {
+  mantis: [
+    {
+      id: 'nc-state-chinese-mantid',
+      url: 'https://content.ces.ncsu.edu/chinese-mantid',
+      titleKey: 'sources.ncMantisTitle',
+      supports: ['mantis-forelegs-and-eggs'],
+      access: 'official-page',
+      checkedAt: '2026-10-01',
+    },
+    {
+      id: 'nyffeler-2017-bird-predation',
+      url: 'https://www.unibas.ch/dam/jcr:8c1649d3-ba69-4907-b84b-e7f84d765a4c/Artikel%20Wilson%20Journal%20of%20Ornithology.pdf',
+      titleKey: 'sources.mantisBirdTitle',
+      supports: ['mantis-us-bird-records'],
+      access: 'full-text',
+      checkedAt: '2026-10-01',
+    },
+  ],
   honeybee: [
     {
       id: 'uf-ifas-bee-stinger',
