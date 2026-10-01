@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useRef } from 'react'
 import type { Locale } from '../i18n/types'
 import type { CleanSubmission } from '../feedback/types'
 import { EVENTS, track } from '../analytics'
@@ -23,8 +23,19 @@ export type SubmitInput = Omit<CleanSubmission, 'locale'> & {
 
 /** 提交一条反馈。 */
 export function useFeedbackSubmit(locale: Locale) {
+  const pendingDraft = useRef<{ payload: string; requestId: string } | null>(null)
   return useCallback(
     async (input: SubmitInput): Promise<SubmitResult> => {
+      const submission = { kind: input.kind, species: input.species, part: input.part, body: input.body, email: input.email, website: input.website, locale }
+      const payload = JSON.stringify(submission)
+      if (pendingDraft.current?.payload !== payload) {
+        try {
+          pendingDraft.current = { payload, requestId: crypto.randomUUID() }
+        } catch {
+          return 'net'
+        }
+      }
+      const draft = pendingDraft.current
       const controller = new AbortController()
       let timer: ReturnType<typeof setTimeout>
       const deadline = new Promise<SubmitResult>((resolve) => {
@@ -38,7 +49,7 @@ export function useFeedbackSubmit(locale: Locale) {
           const res = await fetch('/api/feedback', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ...input, locale }),
+            body: JSON.stringify({ ...submission, requestId: draft.requestId }),
             signal: controller.signal,
           })
           if (res.ok) {
@@ -46,11 +57,12 @@ export function useFeedbackSubmit(locale: Locale) {
             if (controller.signal.aborted) return 'timeout'
             // SPA 回落页或错误 JSON 的 HTTP 200 不能被当作收件确认、清掉草稿。
             if (!receipt || typeof receipt !== 'object' || !('ok' in receipt) || receipt.ok !== true) return 'net'
+            if (pendingDraft.current === draft) pendingDraft.current = null
             track(EVENTS.FEEDBACK_SUBMIT, { kind: input.kind })
             return 'ok'
           }
           if (res.status === 429) return 'rate'
-          if (res.status === 400 || res.status === 413) return 'invalid'
+          if (res.status === 400 || res.status === 409 || res.status === 413) return 'invalid'
           return 'net'
         } catch {
           // 断网、被拦截、后端还没部署 —— 对用户都是同一件事：没发出去，回头再试

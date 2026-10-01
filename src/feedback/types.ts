@@ -33,6 +33,8 @@ export interface RawSubmission {
   locale?: unknown
   /** 蜜罐字段。真人看不见它，填了的一律是机器人。 */
   website?: unknown
+  /** 同一份草稿的重试标识；旧客户端可省略。 */
+  requestId?: unknown
 }
 
 /** 校验并归一化之后的提交，可以直接写库。 */

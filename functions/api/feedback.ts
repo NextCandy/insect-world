@@ -1,6 +1,6 @@
 import { DAILY_SUBMISSION_LIMIT, hashIp, validateSubmission } from '../../src/feedback/rules'
 import { clientIp, guard, json, readJson, type EdgeContext } from '../../src/feedback/edge'
-import type { RawSubmission } from '../../src/feedback/types'
+import type { CleanSubmission, RawSubmission } from '../../src/feedback/types'
 
 /**
  * `POST /api/feedback` —— 收一条提交（纠错 / 自由心愿 / 随便说一句）。
@@ -29,6 +29,12 @@ export const onRequestPost = async ({ request, env }: EdgeContext): Promise<Resp
       return json({ ok: false, error: 'invalid', field: verdict.field }, 400)
     }
 
+    const rawId = body.value.requestId
+    if (rawId !== undefined && (typeof rawId !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(rawId))) {
+      return json({ ok: false, error: 'invalid', field: 'requestId' }, 400)
+    }
+    const requestId = typeof rawId === 'string' ? rawId.toLowerCase() : null
+
     const now = new Date()
     const ipHash = await hashIp(salt, clientIp(request), now)
 
@@ -37,13 +43,27 @@ export const onRequestPost = async ({ request, env }: EdgeContext): Promise<Resp
     const v = verdict.value
     const result = await db
       .prepare(
-        `INSERT INTO messages (created_at, kind, species, part, body, email, locale, ip_hash, status)
-         SELECT ?, ?, ?, ?, ?, ?, ?, ?, 'new'
-         WHERE (SELECT COUNT(*) FROM messages WHERE ip_hash = ?) < ?`,
+        `INSERT INTO messages (created_at, kind, species, part, body, email, locale, ip_hash, status, request_id)
+         SELECT ?, ?, ?, ?, ?, ?, ?, ?, 'new', ?
+         WHERE (SELECT COUNT(*) FROM messages WHERE ip_hash = ?) < ?
+         ON CONFLICT(request_id) DO NOTHING`,
       )
-      .bind(now.getTime(), v.kind, v.species, v.part, v.body, v.email, v.locale, ipHash, ipHash, DAILY_SUBMISSION_LIMIT)
+      .bind(now.getTime(), v.kind, v.species, v.part, v.body, v.email, v.locale, ipHash, requestId, ipHash, DAILY_SUBMISSION_LIMIT)
       .run()
-    if (result.meta?.changes === 0) return json({ ok: false, error: 'rate-limited' }, 429)
+    if (result.meta?.changes === 0) {
+      // 唯一索引原子去重；只在没有写入时读取已有收件，不能先查后写。
+      // 不按 ip_hash 查询，跨 UTC 日或网络切换后的同一草稿仍可确认收件。
+      if (requestId) {
+        const existing = await db.prepare('SELECT kind, species, part, body, email, locale FROM messages WHERE request_id = ?')
+          .bind(requestId).first<CleanSubmission>()
+        if (existing) {
+          const same = existing.kind === v.kind && existing.species === v.species && existing.part === v.part
+            && existing.body === v.body && existing.email === v.email && existing.locale === v.locale
+          return same ? json({ ok: true }) : json({ ok: false, error: 'request-conflict' }, 409)
+        }
+      }
+      return json({ ok: false, error: 'rate-limited' }, 429)
+    }
     if (result.meta?.changes !== 1) throw new Error('Unexpected feedback insert result')
 
     return json({ ok: true })

@@ -4,7 +4,8 @@
 --   npx wrangler d1 execute insect-world --remote --file=db/schema.sql
 -- 本地开发库（wrangler pages dev 用的那份）把 --remote 换成 --local。
 --
--- 全部用 IF NOT EXISTS，重复执行安全 —— 这个文件会被反复手敲，不能是一次性的。
+-- 本文件是完整结构；现有旧库须先执行 db/migrations/2026-10-01-feedback-request-id.sql。
+-- 全部用 IF NOT EXISTS，完成迁移后重复执行安全。
 
 -- ── 候选项：墙上可投票的心愿，完全由作者控制 ──────────────────────────
 --
@@ -37,13 +38,16 @@ CREATE TABLE IF NOT EXISTS messages (
   email      TEXT,                          -- 选填，永不公开
   locale     TEXT NOT NULL,
   ip_hash    TEXT NOT NULL,                 -- 按天轮换，见 src/feedback/rules.ts
-  status     TEXT NOT NULL DEFAULT 'new'    -- 'new' | 'featured' | 'hidden'
+  status     TEXT NOT NULL DEFAULT 'new',   -- 'new' | 'featured' | 'hidden'
+  request_id TEXT                          -- 单次草稿的随机 UUID；旧提交为 NULL
 );
 
 -- 限流查的是「今天这个 ip_hash 提交过几次」。ip_hash 已含日期，所以单列足够。
 CREATE INDEX IF NOT EXISTS idx_messages_ip ON messages (ip_hash);
 -- 收件箱与墙都按 status 过滤后按时间排。
 CREATE INDEX IF NOT EXISTS idx_messages_status_time ON messages (status, created_at DESC);
+-- NULL 不参与唯一约束，旧客户端仍可提交；同一标识只能产生一次收件。
+CREATE UNIQUE INDEX IF NOT EXISTS idx_messages_request_id ON messages (request_id);
 
 -- ── 投票去重 ──────────────────────────────────────────────────────────
 --

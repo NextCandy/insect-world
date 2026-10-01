@@ -99,7 +99,13 @@ try {
     checks++
   }
   const draftPage = await testPage()
-  await draftPage.route('**/api/feedback', route => route.fulfill({ status: 200, contentType: 'text/html', body: '<html>fallback</html>' }))
+  const draftRequests = []
+  await draftPage.route('**/api/feedback', route => {
+    draftRequests.push(route.request().postDataJSON())
+    return route.fulfill(draftRequests.length === 1
+      ? { status: 200, contentType: 'text/html', body: '<html>fallback</html>' }
+      : { status: 200, contentType: 'application/json', body: '{"ok":true}' })
+  })
   await draftPage.goto(base)
   await draftPage.locator('button[class*="reportError"]').click()
   const dialog = draftPage.getByRole('dialog')
@@ -109,6 +115,15 @@ try {
   await dialog.getByRole('status').waitFor()
   assert.equal(await text.inputValue(), '这段反馈需要保留')
   assert.equal(await dialog.getByRole('button', { name: '发送', exact: true }).isEnabled(), true)
+  await dialog.getByRole('button', { name: '发送', exact: true }).click()
+  await dialog.locator('textarea').waitFor({ state: 'hidden' })
+  assert.match(draftRequests[0].requestId, /^[0-9a-f-]{36}$/)
+  assert.deepEqual(draftRequests[1], draftRequests[0])
+  await dialog.getByRole('button', { name: '再说一条', exact: true }).click()
+  await dialog.locator('textarea').fill('这段反馈需要保留')
+  await dialog.getByRole('button', { name: '发送', exact: true }).click()
+  await dialog.locator('textarea').waitFor({ state: 'hidden' })
+  assert.notEqual(draftRequests[2].requestId, draftRequests[0].requestId)
   await draftPage.close()
   checks++
   // 在实际R3F场景中持有模型，加载压力不得逐出正在展示的成虫/卵。
