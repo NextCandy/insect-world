@@ -27,6 +27,7 @@
  * 瓢虫 0.7cm 差 20 倍是同一套处理）。
  */
 import type { InsectModel } from './builders/kit'
+import { createModelCache, type ModelLease } from './modelCache'
 
 /**
  * 阶段。**`larva`/`pupa` 与 `nymph` 不是同义词，是这个功能要讲的那件事本身**：
@@ -60,15 +61,8 @@ const LOADERS: Record<string, Loader> = Object.fromEntries(
 
 const key = (speciesId: string, stage: LifeStage) => `${speciesId}-${stage}`
 
-/**
- * 构建结果缓存。
- *
- * 与 `registry.ts` 的 LRU 不同，这里暂不逐出，方便同一条生活史来回查看。
- * 只有真正展示才构建并入缓存；预取只加载模块。跨物种展示的阶段仍会累积，
- * 后续引入上限时还需保护正在展示和离场的模型，不能直接照抄成虫的逐出逻辑。
- */
-const cache = new Map<string, InsectModel>()
-const inflight = new Map<string, Promise<InsectModel>>()
+/** 与成虫分开的 12 项 LRU；lease 保留展示和离场模型。 */
+const cache = createModelCache(12)
 const modules = new Map<string, Promise<Record<string, unknown>>>()
 
 /** 预取与展示共享模块任务，拒绝任务清掉后允许真正展示时重试。 */
@@ -128,38 +122,28 @@ export function metamorphosisOf(speciesId: string): readonly LifeStage[] | null 
   return null
 }
 
-/** 取得某物种某阶段的模型；重复调用返回同一个实例 */
-export async function loadStageModel(speciesId: string, stage: LifeStage): Promise<InsectModel> {
-  const k = key(speciesId, stage)
-  const hit = cache.get(k)
-  if (hit) return hit
-  const pending = inflight.get(k)
-  if (pending) return pending
-
+function buildStage(k: string): Promise<InsectModel> {
   const loader = LOADERS[k]
-  if (!loader) throw new Error(`未注册的生活史阶段：${k}`)
+  if (!loader) return Promise.reject(new Error(`未注册的生活史阶段：${k}`))
+  return loadModule(k, loader).then((mod) => pickBuilder(mod, k)())
+}
 
-  const task = loadModule(k, loader)
-    .then((mod) => {
-      const model = pickBuilder(mod, k)()
-      cache.set(k, model)
-      inflight.delete(k)
-      return model
-    })
-    .catch((err) => {
-      inflight.delete(k)
-      throw err
-    })
+/** 兼容调试入口；展示者必须持有 acquireStageModel 返回的 lease。 */
+export function loadStageModel(speciesId: string, stage: LifeStage): Promise<InsectModel> {
+  const k = key(speciesId, stage)
+  return cache.load(k, () => buildStage(k))
+}
 
-  inflight.set(k, task)
-  return task
+/** 同步保护待构建模型；release 幂等，也可在 Promise 完成之前取消。 */
+export function acquireStageModel(speciesId: string, stage: LifeStage): ModelLease {
+  const k = key(speciesId, stage)
+  return cache.acquire(k, () => buildStage(k))
 }
 
 /** 预热整条路线的模块；不构建几何，也不把未展示的阶段放进模型缓存。 */
 export function prefetchStages(speciesId: string): void {
   for (const stage of builtStagesOf(speciesId)) {
     const k = key(speciesId, stage)
-    if (cache.has(k) || inflight.has(k)) continue
     void loadModule(k, LOADERS[k]).catch(() => {
       /* 预热失败无所谓，真正打开时会再试一次并显示错误 */
     })
@@ -168,5 +152,6 @@ export function prefetchStages(speciesId: string): void {
 
 /** 仅供测试观察缓存规模 */
 export function stageCacheStats(): { size: number; keys: string[] } {
-  return { size: cache.size, keys: [...cache.keys()] }
+  const { size, ids } = cache.stats()
+  return { size, keys: ids }
 }

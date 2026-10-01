@@ -11,7 +11,8 @@ import { Canvas, useThree } from '@react-three/fiber'
 import { ContactShadows, Environment, Grid, Lightformer, OrbitControls } from '@react-three/drei'
 import * as THREE from 'three'
 import type { InsectModel } from './three/builders/kit'
-import { knownSpecies, loadInsectModel } from './three/registry'
+import { knownSpecies, acquireInsectModel } from './three/registry'
+import { useModelLease } from './hooks/useModelLease'
 import { INSECTS } from './data/insects.zh'
 import './styles/global.css'
 
@@ -114,6 +115,22 @@ function Rig({ model, wire }: { model: InsectModel; wire: boolean }) {
   )
 }
 
+/** Ownership belongs to the R3F tree, whose commit actually removes the primitive. */
+function LeasedRig({ id, wire, onModel, onError }: {
+  id: string
+  wire: boolean
+  onModel: (model: InsectModel | null) => void
+  onError: (error: string | null) => void
+}) {
+  const { model } = useModelLease(id, () => acquireInsectModel(id), {
+    keepLeaving: false,
+    onLoadStart: () => { onModel(null); onError(null) },
+    onLoaded: onModel,
+    onError: error => onError(error instanceof Error ? error.message : String(error)),
+  })
+  return model ? <Rig model={model} wire={wire} /> : null
+}
+
 function App() {
   const [id, setId] = useState<string>(SPECIES[0]?.[0] ?? '')
   const [model, setModel] = useState<InsectModel | null>(null)
@@ -121,17 +138,6 @@ function App() {
   const [wire, setWire] = useState(false)
   const [grid, setGrid] = useState(false)
 
-  useEffect(() => {
-    let alive = true
-    setModel(null)
-    setErr(null)
-    loadInsectModel(id)
-      .then((m) => alive && setModel(m))
-      .catch((e) => alive && setErr(e instanceof Error ? e.message : String(e)))
-    return () => {
-      alive = false
-    }
-  }, [id])
 
   const stats = model
     ? {
@@ -225,7 +231,7 @@ function App() {
                 <Lightformer form="rect" intensity={1.1} color="#ffeeda" position={[4, 0.5, -1.5]} scale={[4, 3, 1]} rotation={[0, -Math.PI / 2.6, 0]} />
               </Environment>
             </Suspense>
-            {model && <Rig model={model} wire={wire} />}
+            <LeasedRig id={id} wire={wire} onModel={setModel} onError={setErr} />
             {grid && model && (
               <Grid
                 args={[model.radius * 6, model.radius * 6]}

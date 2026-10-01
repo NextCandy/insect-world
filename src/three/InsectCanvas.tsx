@@ -14,8 +14,9 @@ import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 import type { Insect } from '../data/types'
 import { useT } from '../i18n/useT'
 import type { InsectModel } from './builders/kit'
-import { loadInsectModel } from './registry'
-import { loadStageModel, type LifeStage } from './stages'
+import { acquireInsectModel, loadInsectModel, cacheStats, knownSpecies } from './registry'
+import { useModelLease } from '../hooks/useModelLease'
+import { acquireStageModel, stageCacheStats, speciesWithStages, builtStagesOf, type LifeStage } from './stages'
 import { applyBlended, makeEmerge, motionFor, resetEmerge, stepBlend } from './motion'
 import { fitDistance, focusDistance } from './framing'
 import { bindContextLoss } from './webgl'
@@ -57,7 +58,7 @@ const ENV_RESOLUTION = COARSE ? 256 : 512
 
 // 把 THREE 挂进 ?perf=1 的调试出口：真机上的微基准要在**页面挂载之前**就能用
 // （后台标签页里 r3f 压根不挂载，见 README「踩过的坑」）
-pexpose({ three: THREE, loadInsectModel, advance })
+pexpose({ three: THREE, loadInsectModel, acquireInsectModel, acquireStageModel, cacheStats, stageCacheStats, knownSpecies, speciesWithStages, builtStagesOf, advance })
 
 /** 标注四色经 CSS token 解析（var(--coral) 等），自动跟随明暗主题 */
 const TONE_VAR: Record<string, string> = {
@@ -751,16 +752,34 @@ function Scene({
   onLoaded: () => void
   onError: (msg: string) => void
 }) {
-  const [model, setModel] = useState<InsectModel | null>(null)
   const [box, setBox] = useState<THREE.Box3 | null>(null)
   /** 上一只虫的离场动画：0.24s 缩小后卸下（参考站换器官的手感） */
-  const [leaving, setLeaving] = useState<InsectModel | null>(null)
   const leavingGroup = useRef<THREE.Group | null>(null)
   const leavingT = useRef(0)
   const spinGroup = useRef<THREE.Group | null>(null)
   /** 拖动后 3 秒内自转让位；由 OrbitControls 的 start 事件续期 */
   const pauseUntil = useRef(0)
   const { gl, invalidate } = useThree()
+
+  // 回调可能随父组件重渲染变化，但不应重新加载模型。
+  const notify = useRef({ onLoaded, onError })
+  notify.current = { onLoaded, onError }
+  const { model, leaving, finishLeaving } = useModelLease(
+    `${insect.id}:${lifeStage ?? 'adult'}`,
+    () => lifeStage ? acquireStageModel(insect.id, lifeStage) : acquireInsectModel(insect.id),
+    {
+      onLoadStart: () => {
+        leavingT.current = 0
+        pmark('model-load-start')
+      },
+      onLoaded: () => {
+        pmark('model-ready')
+        notify.current.onLoaded()
+        markFirstFrame()
+      },
+      onError: error => notify.current.onError(error instanceof Error ? error.message : String(error)),
+    },
+  )
 
   // 用户一碰相机就让转 3 秒，松手后再自然接管
   useEffect(() => {
@@ -781,7 +800,7 @@ function Scene({
     leavingGroup.current?.scale.setScalar(1 - 0.34 * k * k)
     if (k >= 1) {
       leavingGroup.current?.scale.setScalar(1)
-      setLeaving(null)
+      finishLeaving()
     }
     invalidate()
   })
@@ -790,51 +809,6 @@ function Scene({
   useEffect(() => {
     gl.localClippingEnabled = true
   }, [gl])
-
-  /**
-   * 回调放进 ref 再用：它们是父组件每次渲染新建的闭包，
-   * 若直接进依赖数组，「加载完 → 通知父组件 → 父组件重渲染 → 新回调 →
-   * 重新加载」会变成死循环，表现为 3D 区永远空白。
-   */
-  const notify = useRef({ onLoaded, onError })
-  notify.current = { onLoaded, onError }
-
-  useEffect(() => {
-    let alive = true
-    setModel((cur) => {
-      if (cur) {
-        leavingT.current = 0
-        setLeaving(cur)
-      }
-      return null
-    })
-    pmark('model-load-start')
-    /**
-     * 生活史模式下展台展示的是**阶段模型**（卵/幼虫/蛹/若虫），走
-     * `three/stages.ts` 那套独立注册表；`lifeStage` 为 null 时照旧是成虫。
-     *
-     * 分成两个注册表而不是一个，是因为阶段模型的懒加载边界就该落在这里 ——
-     * 不打开生活史的人不该下载那 11 个额外的 builder。这也是 `stages.ts` 在
-     * 本次接线之前完全没有生产代码引用、阶段 chunk 压根不进产物的原因。
-     */
-    const load = lifeStage ? loadStageModel(insect.id, lifeStage) : loadInsectModel(insect.id)
-    load
-      .then((m) => {
-        if (!alive) return
-        pmark('model-ready')
-        setModel(m)
-        notify.current.onLoaded()
-        // 模型进场后的下一次 render 就是「虫子出现」的那一帧
-        markFirstFrame()
-      })
-      .catch((e) => {
-        if (!alive) return
-        notify.current.onError(e instanceof Error ? e.message : String(e))
-      })
-    return () => {
-      alive = false
-    }
-  }, [insect.id, lifeStage])
 
   /**
    * 羽化触发。用 nonce 而不是让 InsectMesh 自己记上一个阶段：切换阶段会

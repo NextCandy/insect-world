@@ -111,7 +111,91 @@ try {
   assert.equal(await dialog.getByRole('button', { name: '发送', exact: true }).isEnabled(), true)
   await draftPage.close()
   checks++
-  console.log(`✓ 浏览器回归 ${checks} 个场景通过（窄屏布局、换虫、存储故障、来源与反馈草稿）`)
+  // 在实际R3F场景中持有模型，加载压力不得逐出正在展示的成虫/卵。
+  const cachePage = await testPage({ viewport: { width: 1440, height: 1000 } })
+  await cachePage.goto(`${base}/?perf=1`)
+  await cachePage.waitForFunction(() => window.__perf?.firstFrame != null)
+  await cachePage.evaluate(async () => {
+    const debug = window.__perf.debug
+    const current = await debug.loadInsectModel('rhinoceros-beetle')
+    let disposals = 0
+    const resources = new Set()
+    current.group.traverse(mesh => {
+      if (!mesh.isMesh) return
+      resources.add(mesh.geometry)
+      for (const material of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) resources.add(material)
+    })
+    for (const resource of resources) resource.addEventListener('dispose', () => { disposals++ })
+    for (const id of debug.knownSpecies().filter(id => id !== 'rhinoceros-beetle').slice(0, 20)) {
+      const lease = debug.acquireInsectModel(id)
+      try { await lease.promise } finally { lease.release() }
+    }
+    if (disposals || !debug.cacheStats().ids.includes('rhinoceros-beetle') || debug.cacheStats().size > 12) throw new Error('展示成虫被逐出或dispose')
+  })
+  await cachePage.locator('button[class*="lifeCue"]').click()
+  await cachePage.waitForFunction(() => window.__perf.marks.filter(mark => mark.name === 'model-committed').length >= 2)
+  const cacheEvidence = await cachePage.evaluate(async () => {
+    const debug = window.__perf.debug
+    const reservation = debug.acquireStageModel('rhinoceros-beetle', 'egg')
+    const current = await reservation.promise
+    reservation.release() // 接下来的保护必须来自真实Scene，而不是本测试的额外引用。
+    let disposals = 0
+    const resources = new Set()
+    current.group.traverse(mesh => {
+      if (!mesh.isMesh) return
+      resources.add(mesh.geometry)
+      for (const material of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) resources.add(material)
+    })
+    for (const resource of resources) resource.addEventListener('dispose', () => { disposals++ })
+    const pairs = debug.speciesWithStages().flatMap(id => debug.builtStagesOf(id).map(stage => [id, stage]))
+    const sizes = []
+    for (let lap = 0; lap < 2; lap++) {
+      for (const [id, stage] of pairs) {
+        const lease = debug.acquireStageModel(id, stage)
+        try { await lease.promise } finally { lease.release() }
+        if (debug.stageCacheStats().size > 12) throw new Error('阶段缓存没有回落到12')
+      }
+      const buffers = new Set()
+      for (const key of debug.stageCacheStats().keys) {
+        const [, id, stage] = key.match(/^(.*)-(egg|larva|pupa|nymph)$/)
+        const lease = debug.acquireStageModel(id, stage)
+        try {
+          const model = await lease.promise
+          model.group.traverse(mesh => {
+            if (!mesh.isMesh) return
+            const geometry = mesh.geometry
+            for (const attribute of Object.values(geometry.attributes)) buffers.add(attribute.array.buffer)
+            if (geometry.index) buffers.add(geometry.index.array.buffer)
+          })
+        } finally { lease.release() }
+      }
+      sizes.push([...buffers].reduce((bytes, buffer) => bytes + buffer.byteLength, 0))
+    }
+    if (disposals || !debug.stageCacheStats().keys.includes('rhinoceros-beetle-egg')) throw new Error('展示卵被逐出或dispose')
+    if (sizes[1] !== sizes[0]) throw new Error('相同遍历后几何缓存持续增长')
+    return { stages: pairs.length, cache: debug.stageCacheStats().size, geometryBytes: sizes, activeDisposals: disposals }
+  })
+  console.log('✓ 模型缓存压力检查', JSON.stringify(cacheEvidence))
+  await cachePage.getByRole('button', { name: /下一步/ }).click()
+  await cachePage.getByRole('button', { name: /下一步/ }).click()
+  await cachePage.getByRole('button', { name: /下一步/ }).click()
+  await cachePage.getByRole('button', { name: /看完了/ }).click()
+  await cachePage.waitForFunction(() => window.__perf.marks.filter(mark => mark.name === 'model-committed').length >= 3)
+  await cachePage.close()
+  checks++
+  const previewPage = await testPage({ viewport: { width: 1440, height: 1000 } })
+  const previewErrors = []
+  previewPage.on('pageerror', error => previewErrors.push(error.message))
+  await previewPage.goto(`${base}/preview.html`)
+  await previewPage.waitForFunction(() => window.__preview?.model && window.__preview.model.group.parent)
+  const originalModel = await previewPage.evaluateHandle(() => window.__preview.model)
+  await previewPage.getByRole('button', { name: '中华大刀螳', exact: true }).click()
+  await previewPage.waitForFunction(original => window.__preview?.model && window.__preview.model !== original && window.__preview.model.group.parent, originalModel)
+  await originalModel.dispose()
+  assert.deepEqual(previewErrors, [])
+  await previewPage.close()
+  checks++
+  console.log(`✓ 浏览器回归 ${checks} 个场景通过（窄屏布局、换虫、存储故障、来源、反馈草稿、模型缓存与调试台）`)
 } finally {
   try { await browser?.close() } finally { server.kill('SIGTERM') }
 }

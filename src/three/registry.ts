@@ -5,9 +5,10 @@
  * 这里按 id 动态 import，Vite 会为每个物种切出独立 chunk，
  * 只在用户点到它时才下载并构建。构建结果按 id 缓存，切回来时瞬时。
  */
-import type * as THREE from 'three'
 import type { InsectModel } from './builders/kit'
 import { pspan, ptrack } from '../perf'
+import { createModelCache, type ModelLease } from './modelCache'
+export type { ModelLease } from './modelCache'
 
 type Loader = () => Promise<Record<string, unknown>>
 
@@ -38,19 +39,8 @@ const LOADERS: Record<string, Loader> = Object.fromEntries(
     .filter(([id]) => !UTILITY_MODULES.has(id)),
 )
 
-/**
- * 已构建模型的 LRU 缓存。
- *
- * 原先只进不出：逐只翻完 50 种（方向键就是这么用的），50 套几何体全部
- * 留在显存里，每套约 2~3MB —— 桌面机无所谓，手机上是白占一百多兆。
- * 上限取 12，保留最近真正加载过的模型；hover 预取只拉模块，不占模型缓存。
- * 这里尚未对活跃引用计数，大量真实加载仍可能逐出展示/离场中的旧模型。
- * 逐出时要手动 dispose —— three.js 的几何体与材质握着 GPU 资源，
- * 不 dispose 只断引用，显存照样占着。
- */
-const MAX_LIVE = 12
-const cache = new Map<string, InsectModel>()
-const inflight = new Map<string, Promise<InsectModel>>()
+/** 12 个已构建模型；展示/离场 lease 保护活跃引用，全部活跃时暂时溢出。 */
+const cache = createModelCache(12)
 // 模块预取与真正加载共享任务；成功模块可复用，失败请求必须允许重试。
 const modules = new Map<string, Promise<Record<string, unknown>>>()
 
@@ -65,30 +55,9 @@ function loadModule(id: string, loader: Loader): Promise<Record<string, unknown>
   return task
 }
 
-/** Map 按插入序遍历；重新插入 = 挪到队尾（最近使用） */
-function touch(id: string, model: InsectModel): void {
-  cache.delete(id)
-  cache.set(id, model)
-}
-
-function evictStale(): void {
-  while (cache.size > MAX_LIVE) {
-    const oldest = cache.entries().next().value
-    if (!oldest) return
-    const [id, model] = oldest
-    cache.delete(id)
-    model.group.traverse((o) => {
-      const m = o as THREE.Mesh
-      if (!m.isMesh) return
-      m.geometry.dispose()
-      for (const mat of Array.isArray(m.material) ? m.material : [m.material]) mat.dispose()
-    })
-  }
-}
-
 /** 仅供测试观察缓存规模 */
 export function cacheStats(): { size: number; ids: string[] } {
-  return { size: cache.size, ids: [...cache.keys()] }
+  return cache.stats()
 }
 
 /** 从模块里挑出那个 buildXxx 函数 —— 各文件导出名不同，按前缀找 */
@@ -123,42 +92,28 @@ export function knownSpecies(): string[] {
   return Object.keys(LOADERS).sort()
 }
 
-/** 取得某物种的模型；重复调用返回同一个实例 */
-export async function loadInsectModel(id: string): Promise<InsectModel> {
-  const hit = cache.get(id)
-  if (hit) {
-    touch(id, hit)
-    return hit
-  }
-
-  const pending = inflight.get(id)
-  if (pending) return pending
-
+function buildModel(id: string): Promise<InsectModel> {
   const loader = LOADERS[id]
-  if (!loader) throw new Error(`未注册的物种：${id}`)
+  if (!loader) return Promise.reject(new Error(`未注册的物种：${id}`))
+  // 两段分开计时：chunk 下载+求值 vs builder 真正构建几何。
+  return ptrack(`chunk:${id}`, loadModule(id, loader))
+    .then((mod) => pspan(`build:${id}`, () => pickBuilder(mod)()))
+}
 
-  // 两段分开计时：chunk 下载+求值 vs builder 真正构建几何（默认关闭，见 src/perf.ts）
-  const task = ptrack(`chunk:${id}`, loadModule(id, loader))
-    .then((mod) => {
-      const model = pspan(`build:${id}`, () => pickBuilder(mod)())
-      cache.set(id, model)
-      evictStale()
-      inflight.delete(id)
-      return model
-    })
-    .catch((err) => {
-      inflight.delete(id)
-      throw err
-    })
+/** 兼容预热/调试入口；展示者必须持有 acquireInsectModel 返回的 lease。 */
+export function loadInsectModel(id: string): Promise<InsectModel> {
+  return cache.load(id, () => buildModel(id))
+}
 
-  inflight.set(id, task)
-  return task
+/** 在下载开始的同一同步调用中保留引用；完成、取消或离场后 release。 */
+export function acquireInsectModel(id: string): ModelLease {
+  return cache.acquire(id, () => buildModel(id))
 }
 
 /** 预热只拉取模块；真正选中时才构建模型，不让悬停触发 LRU 逐出。 */
 export function prefetchInsectModel(id: string): void {
   const loader = LOADERS[id]
-  if (cache.has(id) || inflight.has(id) || !loader) return
+  if (!loader) return
   void loadModule(id, loader).catch(() => {
     /* 预热失败无所谓，真正选中时会再试一次并显示错误 */
   })
