@@ -8,18 +8,48 @@ export type ContentClaim =
   | 'us-season-and-introduction'
   | 'larval-stages-and-native-range'
   | 'reflex-bleeding'
+  | 'bee-stinging'
+  | 'waggle-run-coding'
+  | 'winter-clustering'
 
 export interface ContentSource {
   id: string
   url: string
   titleKey: 'sources.envTitle' | 'sources.zooTitle' | 'sources.combatTitle'
     | 'sources.ncLadybirdTitle' | 'sources.cornellLadybirdTitle' | 'sources.adwLadybirdTitle' | 'sources.bleedingTitle'
+    | 'sources.ufBeeTitle' | 'sources.waggleTitle' | 'sources.psuWinterTitle'
   supports: readonly ContentClaim[]
   access: 'full-text' | 'official-page' | 'abstract'
   checkedAt: string
 }
 
 export const CONTENT_SOURCES: Readonly<Record<string, readonly ContentSource[]>> = {
+  honeybee: [
+    {
+      id: 'uf-ifas-bee-stinger',
+      url: 'https://ask.ifas.ufl.edu/publication/IN1005',
+      titleKey: 'sources.ufBeeTitle',
+      supports: ['bee-stinging'],
+      access: 'official-page',
+      checkedAt: '2026-10-01',
+    },
+    {
+      id: 'ai-2019-waggle-review',
+      url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC6835826/',
+      titleKey: 'sources.waggleTitle',
+      supports: ['waggle-run-coding'],
+      access: 'full-text',
+      checkedAt: '2026-10-01',
+    },
+    {
+      id: 'psu-2021-winter-clustering',
+      url: 'https://www.psu.edu/news/research/story/summer-weather-conditions-influence-winter-survival-honey-bees',
+      titleKey: 'sources.psuWinterTitle',
+      supports: ['winter-clustering'],
+      access: 'official-page',
+      checkedAt: '2026-10-01',
+    },
+  ],
   ladybird: [
     {
       id: 'nc-state-c7-predation',

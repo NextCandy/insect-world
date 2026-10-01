@@ -89,17 +89,17 @@ export const INSECTS: Insect[] = [
     epithet: 'The architect who draws maps in dance',
     order: 'hymenoptera',
     summary:
-      'The western honey bee is one of the most highly social pollinating insects. A colony has a single queen, tens of thousands of workers, and a few drones, coordinated through pheromones and dance. Over its few weeks of life, a worker moves through jobs — cleaning the nest, tending brood, building comb, and foraging.',
+      'The western honey bee lives in colonies with queens, workers and drones, communicating through pheromones and dance. Workers rear brood, build comb and forage; lifespan varies with season. In cold climates, colonies survive winter by clustering for warmth and consuming stored food.',
     facts: [
       { key: 'Length', value: 'Workers about 12–13 mm; queens can reach 18–20 mm', icon: 'size' },
       { key: 'Weight', value: 'Workers weigh about 90 mg; over its lifetime one worker produces less than 1 g of honey', icon: 'weight' },
       { key: 'Lifespan', value: 'Summer workers live about 5–6 weeks; overwintering workers can survive several months', icon: 'time' },
-      { key: 'Habitat', value: 'Nests in tree hollows, rock crevices, or artificial hives; the colony stays active year-round without hibernating', icon: 'place' },
+      { key: 'Habitat', value: 'Nests in tree hollows or managed hives; cold-climate colonies cluster and generate heat in winter', icon: 'place' },
       { key: 'Diet', value: 'Feeds on nectar and pollen; nectar is converted into honey as winter food stores', icon: 'food' },
-      { key: 'Communication', value: 'Uses the direction and duration of the waggle dance to tell nestmates the bearing and distance to a food source', icon: 'ability' },
+      { key: 'Communication', value: 'On vertical comb, waggle run direction and duration encode a food source’s bearing and distance', icon: 'ability' },
     ],
     hotspots: [
-      { id: 'honeybee-stinger', label: 'Stinger', note: 'Barbed and cannot be pulled back out; after stinging, the worker dies as her internal organs are torn away — a fate limited to workers', anchor: 'stinger', tone: 'amber' },
+      { id: 'honeybee-stinger', label: 'Stinger', note: 'A worker’s stinger has barbs; if it detaches after entering tough skin, damage to her abdomen can be fatal', anchor: 'stinger', tone: 'amber' },
       { id: 'honeybee-pollenBasket', label: 'Pollen basket (corbicula)', note: 'A concave structure on the hind leg’s tibia used to carry compacted pollen loads back to the hive', anchor: 'pollenBasket', tone: 'lavender' },
       { id: 'honeybee-wing', label: 'Wings', note: 'Forewings and hindwings link together via a row of tiny hooks (hamuli) into a single surface, beating about 230 times per second', anchor: 'wing', tone: 'coral' },
       { id: 'honeybee-eye', label: 'Compound eyes', note: 'Can detect ultraviolet light, revealing nectar guide patterns on flowers that are invisible to the human eye', anchor: 'eye', tone: 'sage' },
@@ -109,7 +109,7 @@ export const INSECTS: Insect[] = [
     ecology:
       'As one of the world’s most important commercial pollinators, it pollinates large numbers of food and cash crops; colony health is also regarded as a sensitive indicator of pesticide pollution and ecological stress.',
     trivia:
-      'The waggle dance is more than a dance — its angle encodes the sun’s bearing, its duration the distance to food, one of the few known symbolic systems in a non-human animal encoding abstract spatial information.',
+      'On vertical comb, a waggle run’s angle from upward encodes food direction relative to the sun. Run duration relates to distance; the duration of the whole dance is not the distance code.',
     metamorphosis: 'complete',
     lifecycle: ['Egg', 'Larva', 'Pupa', 'Adult (worker/queen/drone)'],
     range: 'Native to Europe, Africa, and the Middle East; now spread through beekeeping to every continent except Antarctica',

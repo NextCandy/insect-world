@@ -78,17 +78,17 @@ export const INSECTS: Insect[] = [
     epithet: '用舞蹈画地图的建筑师',
     order: 'hymenoptera',
     summary:
-      '西方蜜蜂是社会性程度最高的传粉昆虫之一，蜂群由一只蜂后、数万只工蜂和少量雄蜂组成，靠信息素与舞蹈协调分工。工蜂在数周的一生里依次承担清巢、育幼、筑巢与采集等不同工种。',
+      '西方蜜蜂是社会性传粉昆虫，蜂群通常有蜂后、工蜂与雄蜂，靠信息素与舞蹈交流。工蜂承担育幼、筑巢与采集等工作，寿命随季节变化；寒冷地区的蜂群依靠抱团产热和储存的食物越冬。',
     facts: [
       { key: '体长', value: '工蜂约12–13毫米，蜂后可达18–20毫米', icon: 'size' },
       { key: '体重', value: '工蜂约90毫克，一生所能酿出的蜂蜜不足1克', icon: 'weight' },
       { key: '寿命', value: '夏季工蜂约5–6周，越冬工蜂可存活数月', icon: 'time' },
-      { key: '栖息环境', value: '营巢于树洞、岩缝或人工蜂箱，蜂群终年不冬眠', icon: 'place' },
+      { key: '栖息环境', value: '营巢于树洞或人工蜂箱，寒冷地区的蜂群抱团产热越冬', icon: 'place' },
       { key: '食性', value: '采集花蜜与花粉为食，花蜜酿成蜂蜜作越冬储粮', icon: 'food' },
-      { key: '通讯', value: '以摆尾舞的方向与时长，向同伴传递蜜源方位和距离', icon: 'ability' },
+      { key: '通讯', value: '在垂直巢脾上，以摆尾直跑的方向和时长编码食源方位与距离', icon: 'ability' },
     ],
     hotspots: [
-      { id: 'honeybee-stinger', label: '螫针', note: '带倒钩不能拔出，蜇人后因内脏撕裂而死亡，仅限工蜂', anchor: 'stinger', tone: 'amber' },
+      { id: 'honeybee-stinger', label: '螫针', note: '工蜂螫针有倒钩；刺入较厚皮肤后若脱落，腹部受损可致死', anchor: 'stinger', tone: 'amber' },
       { id: 'honeybee-pollenBasket', label: '花粉篮', note: '后足胫节凹陷构造，用于携带压实的花粉团返巢', anchor: 'pollenBasket', tone: 'lavender' },
       { id: 'honeybee-wing', label: '翅', note: '前后翅以翅钩列连锁成一片，振翅频率约230次/秒', anchor: 'wing', tone: 'coral' },
       { id: 'honeybee-eye', label: '复眼', note: '能感知紫外光，辨认花朵上人眼看不见的导蜜纹', anchor: 'eye', tone: 'sage' },
@@ -98,7 +98,7 @@ export const INSECTS: Insect[] = [
     ecology:
       '作为全球最重要的商业传粉者之一，为大量粮食与经济作物授粉；蜂群健康也被视为农药污染与生态压力的敏感指示器。',
     trivia:
-      '摆尾舞不只是「跳个舞」——角度对应太阳方位、时长对应蜜源距离，是已知非人类动物里少有的、能编码抽象空间信息的符号通讯系统。',
+      '垂直巢脾上，摆尾直跑与向上方向的夹角，表示食源相对太阳的方位；直跑时长关联距离，并不是整套舞蹈跳得越久就代表越远。',
     metamorphosis: 'complete',
     lifecycle: ['卵', '幼虫', '蛹', '成虫（工蜂/蜂后/雄蜂）'],
     range: '原产欧洲、非洲及中东，现随人工饲养遍布除南极洲外的各大洲',

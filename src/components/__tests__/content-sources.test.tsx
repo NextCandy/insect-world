@@ -10,6 +10,28 @@ const props = { onCompare: () => {}, onDiscover: () => {}, onReportError: () => 
 afterEach(cleanup)
 
 describe('detail source evidence', () => {
+  it('shows scoped honeybee evidence for stinging, dance coding and winter clustering', () => {
+    renderZh(<DetailPanel insect={zhInsects.find(insect => insect.id === 'honeybee')!} {...props} />)
+    const section = screen.getByRole('region', { name: '来源与核校' })
+    expect(within(section).getAllByRole('link').map(link => link.getAttribute('href'))).toEqual([
+      'https://ask.ifas.ufl.edu/publication/IN1005',
+      'https://pmc.ncbi.nlm.nih.gov/articles/PMC6835826/',
+      'https://www.psu.edu/news/research/story/summer-weather-conditions-influence-winter-survival-honey-bees',
+    ])
+    expect(section.textContent).toContain('螫针倒钩与厚皮肤中的脱落')
+    expect(section.textContent).toContain('摆尾直跑的方向与时长')
+    expect(section.textContent).toContain('寒冷地区蜂群抱团产热与储粮')
+    expect(section.textContent).toContain('非专家复审')
+  })
+  it('localizes honeybee evidence and keeps the remaining checks explicit', () => {
+    renderEn(<DetailPanel insect={enInsects.find(insect => insect.id === 'honeybee')!} {...props} />)
+    const section = screen.getByRole('region', { name: 'Sources and checks' })
+    expect(within(section).getAllByRole('link')).toHaveLength(3)
+    expect(section.textContent).toContain('Waggle run direction and duration')
+    expect(section.textContent).toContain('Cold-climate winter clustering and food stores')
+    expect(section.textContent).toContain('No expert review')
+    expect(section.textContent).not.toMatch(/[一-鿿]/)
+  })
   it('shows ladybird evidence and identifies the paywalled research as abstract-only', () => {
     renderZh(<DetailPanel insect={zhInsects.find(insect => insect.id === 'ladybird')!} {...props} />)
     const section = screen.getByRole('region', { name: '来源与核校' })
@@ -79,7 +101,7 @@ describe('detail source evidence', () => {
   })
 
   it('does not manufacture evidence links for a species awaiting checks', () => {
-    renderZh(<DetailPanel insect={zhInsects[1]} {...props} />)
+    renderZh(<DetailPanel insect={zhInsects.find(insect => insect.id === 'dragonfly')!} {...props} />)
     const section = screen.getByRole('region', { name: '来源与核校' })
     expect(section.textContent).toContain('尚未逐条核校')
     expect(within(section).queryAllByRole('link')).toHaveLength(0)

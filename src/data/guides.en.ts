@@ -115,17 +115,17 @@ export const GUIDES: Record<string, Guide> = {
     lesson: [
       {
         title: "How the Waggle Dance Points",
-        body: "A forager returns to the hive and runs a figure-eight on the comb, waggling her abdomen and using sound pulses from thorax muscles; dance direction matches the sun's bearing, waggle duration signaling distance.",
+        body: "On vertical comb, a forager waggles along a straight run and circles back. Its angle from upward encodes food direction relative to the sun; run duration, rather than total dance time, relates to distance.",
         anchor: 'thorax',
       },
       {
         title: "Carrying Pollen Home",
-        body: "The hindleg's tibia is dished into a small pollen basket (corbicula); a worker brushes pollen off her body with her legs, pressing it into a compact pellet wedged in the basket, carried home to feed the larvae.",
+        body: "A worker carries compact pollen loads in baskets on her hind legs. The colony stores pollen and nectar to support brood and colony life; these loads reveal food returning to the nest.",
         anchor: 'pollenBasket',
       },
       {
         title: "Why the Stinger Can Be Fatal",
-        body: "A worker's stinger is barbed, so once it pierces thick mammal skin it cannot pull free; struggling tears her venom gland and innards, killing her. A queen's smooth, barbless stinger lets her sting repeatedly.",
+        body: "Worker stinger barbs can lodge in tough skin. Escape may detach the stinger and venom sac, fatally injuring her abdomen. Queen stingers have reduced barbs, rather than being completely barbless.",
         anchor: 'stinger',
       },
       {
@@ -135,30 +135,26 @@ export const GUIDES: Record<string, Guide> = {
       },
     ],
     motion: {
-      title: "Shivering to Survive Winter",
-      body: "When temperatures drop sharply, workers do not hibernate; they cluster around the queen, contracting flight muscles without moving their wings to generate heat. Outer bees swap places with those inside, keeping the core near 35°C.",
+      title: "Clustering for Winter Warmth",
+      body: "In cold climates, colonies cluster and generate heat with flight muscles while consuming stored food. Cluster temperature is not fixed year-round. This describes colony behavior; the single bee model does not simulate a cluster.",
     },
     quiz: [
       {
-        question: "What information does the duration of a honeybee's waggle dance mainly convey?",
+        question: "What does the duration of a honeybee's waggle run mainly convey?",
         options: ["The species of flower at the nectar source", "The distance between the nectar source and the hive", "The day's weather conditions"],
         answer: 1,
-        explain: "In the waggle dance, direction matches the sun's bearing toward the nectar source, while duration signals how far it is from the hive.",
+        explain: "On vertical comb, the run's angle from upward encodes food bearing relative to the sun. Run duration relates to distance, not total dance time.",
       },
       {
-        question: "Which statement about a honeybee's stinger is correct?",
-        options: [
-          "Both worker and queen stingers are barbed, and both die after stinging once",
-          "Only the worker's stinger is barbed and she dies from torn innards after stinging; the queen's stinger is smooth and reusable",
-          "A honeybee's stinger carries no venom at all, only physical pain",
-        ],
+        question: "What can cause a worker to die after stinging tough skin?",
+        options: ["Every bee inevitably dies after any sting", "Stinger and venom sac detachment injures her abdomen", "The stinger has no venom and only causes physical pain"],
         answer: 1,
-        explain: "A worker's barbed stinger cannot be withdrawn once it pierces skin; struggling tears her innards and kills her. A queen's smooth stinger stings again.",
+        explain: "Barbs can lodge in tough skin, so escape may detach the stinger and injure the abdomen. This does not mean every bee dies after every sting.",
       },
     ],
     habitat: {
-      title: "A Warm Society Inside the Hive",
-      body: "Wild colonies nest in hollow trunks or rock crevices, kept colonies in hives; the nest holds about 35°C year-round and never hibernates. Workers forage within a two-to-three-kilometer radius, health tracking nearby blooming.",
+      title: "Winter Life Inside the Nest",
+      body: "Colonies nest in tree hollows or managed hives. In cold climates, limited winter foraging makes stored food and heat-generating clusters vital. This does not mean the whole nest stays at a fixed temperature year-round.",
     },
   },
 

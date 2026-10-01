@@ -9,6 +9,12 @@ import { definePart } from './part'
 export const PART = definePart(
   {
     'sources.title': '来源与核校',
+    'sources.ufBeeTitle': '佛罗里达大学 IFAS：西方蜜蜂物种资料',
+    'sources.waggleTitle': '2019年摆尾舞神经行为学综述',
+    'sources.psuWinterTitle': '宾夕法尼亚州立大学：蜜蜂越冬研究报道',
+    'sources.beeStinging': '螫针倒钩与厚皮肤中的脱落',
+    'sources.waggleCoding': '摆尾直跑的方向与时长',
+    'sources.winterClustering': '寒冷地区蜂群抱团产热与储粮',
     'sources.limits': '仅以下事实已按所列来源核对；热点、课程和测验仍未全面核校。非专家复审。',
     'sources.pending': '尚未逐条核校；内容未经昆虫学专家复审。',
     'sources.envTitle': '日本环境省：日本亚种生态表（PDF，第36页）',
@@ -59,6 +65,12 @@ export const PART = definePart(
   },
   {
     'sources.title': 'Sources and checks',
+    'sources.ufBeeTitle': 'University of Florida IFAS: western honey bee profile',
+    'sources.waggleTitle': '2019 review of waggle dance neuroethology',
+    'sources.psuWinterTitle': 'Penn State University: report on honey bee winter survival',
+    'sources.beeStinging': 'Stinger barbs and detachment in tough skin',
+    'sources.waggleCoding': 'Waggle run direction and duration',
+    'sources.winterClustering': 'Cold-climate winter clustering and food stores',
     'sources.limits': 'Only the facts listed below were checked against these sources. Hotspots, lessons and quizzes have not been fully checked. No expert review.',
     'sources.pending': 'Not yet checked claim by claim. No entomologist review.',
     'sources.envTitle': 'Japan Ministry of the Environment: Japanese subspecies table (PDF, page 36)',

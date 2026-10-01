@@ -12,6 +12,9 @@ const claimKeys = {
   'us-season-and-introduction': 'sources.usSeasonIntroduction',
   'larval-stages-and-native-range': 'sources.larvalStagesRange',
   'reflex-bleeding': 'sources.reflexBleeding',
+  'bee-stinging': 'sources.beeStinging',
+  'waggle-run-coding': 'sources.waggleCoding',
+  'winter-clustering': 'sources.winterClustering',
 } as const satisfies Record<ContentClaim, string>
 
 const accessKeys = {
