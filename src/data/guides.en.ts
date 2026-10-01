@@ -266,34 +266,34 @@ export const GUIDES: Record<string, Guide> = {
     lesson: [
       {
         title: "Red and Black as a Warning",
-        body: "The hardened forewings (elytra) show bright red dotted with black spots, a high-contrast pattern that in nature signals 'not food'; a bird tasting the bitterness once remembers and avoids the look.",
+        body: "The red-and-black wing cases provide warning coloration alongside chemical defence. This links appearance with defence without assuming every predator learns permanent avoidance from a single taste.",
         anchor: 'elytra',
       },
       {
         title: "Defending Itself When Startled",
-        body: "The real defense hides in the leg joints: when startled, a ladybird oozes bitter, irritating blood (hemolymph)—the chemical weapon the red-and-black pattern advertises, the color only an early warning.",
+        body: "When stimulated, seven-spot ladybirds can release alkaloid-rich fluid from their leg joints. Called reflex bleeding, this is one chemical defence that helps deter predators.",
         anchor: 'leg',
       },
       {
         title: "Counting Spots to Tell Species",
-        body: "The seven-spot ladybird takes its name from seven black spots on its elytra, but close relatives vary in number, from two to more than twenty; the spot pattern is a key way to tell ladybird species apart.",
+        body: "Usually there are three spots on each wing case and one shared at the base. Identify the beetle using its domed shape and pale pronotal markings as well as its spots; spot count alone is insufficient.",
         anchor: 'spot',
       },
       {
-        title: "A Lifetime of Eating Aphids",
-        body: "From larva to adult, the seven-spot ladybird eats almost nothing but aphids; a single larva can devour several hundred over its development, making it a natural pest controller relied on in farms and orchards.",
+        title: "Larvae Hunt Too",
+        body: "Larvae and adults prey on aphids and other small insects and their eggs. The elongated, dark larva looks unlike the domed adult, but both stages contribute to natural pest suppression.",
       },
     ],
     motion: {
-      title: "Playing Dead as a Reflex",
-      body: "When touched or approached by a predator, a ladybird snaps its legs and head in and drops off the leaf, playing dead; only if disturbed further do its legs ooze bitter hemolymph. This hide-then-defend response saves energy.",
+      title: "Reflex Bleeding as Defence",
+      body: "Stimulation can cause alkaloid-rich fluid to emerge from leg joints. Research found individual differences in the amount released and its alkaloid concentration; bright color alone does not tell us how much fluid is present.",
     },
     quiz: [
       {
-        question: "What is the main purpose of the seven-spot ladybird's red-with-black-spots coloring?",
-        options: ["Helping it camouflage among flowers", "Warning predators that it tastes bad and contains bitter compounds", "Attracting others of its kind to cluster for winter"],
+        question: "What can a seven-spot ladybird release from its leg joints when stimulated?",
+        options: ["Nectar for pollination", "Fluid rich in defensive alkaloids", "Silk for building webs"],
         answer: 1,
-        explain: "The red-and-black pattern is a warning color matching the bitter hemolymph secreted when startled; predators remember and avoid it—not camouflage.",
+        explain: "The fluid is reflex blood rich in defensive alkaloids. It helps deter predators and is unrelated to pollination or web-building.",
       },
       {
         question: "Which statement about the black spots on a ladybird's elytra is correct?",
@@ -303,12 +303,12 @@ export const GUIDES: Record<string, Guide> = {
           "The number of spots increases year by year as the ladybird ages",
         ],
         answer: 1,
-        explain: "Only the seven-spot ladybird has exactly seven spots; close relatives vary in number and arrangement, so spot patterns help tell species apart.",
+        explain: "Seven-spot ladybirds usually have seven spots. Identification also uses body shape and pronotal markings; spot count alone is insufficient.",
       },
     ],
     habitat: {
       title: "Wherever Aphids Gather",
-      body: "Wherever aphids cluster densely, seven-spot ladybirds gather too, favoring tender shoots at farmland, garden, and forest edges. Come autumn, adults migrate to rock crevices or leaf litter, dispersing each spring for new colonies.",
+      body: "Look among aphid-infested crops and other plants for both larvae and adults. Adults overwinter in sheltered sites. The northeastern US has one to two generations yearly; this is not a rule for every region.",
     },
   },
 

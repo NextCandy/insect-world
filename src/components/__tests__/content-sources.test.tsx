@@ -10,6 +10,32 @@ const props = { onCompare: () => {}, onDiscover: () => {}, onReportError: () => 
 afterEach(cleanup)
 
 describe('detail source evidence', () => {
+  it('shows ladybird evidence and identifies the paywalled research as abstract-only', () => {
+    renderZh(<DetailPanel insect={zhInsects.find(insect => insect.id === 'ladybird')!} {...props} />)
+    const section = screen.getByRole('region', { name: '来源与核校' })
+    const links = within(section).getAllByRole('link')
+    expect(links.map(link => link.getAttribute('href'))).toEqual([
+      'https://entomology.ces.ncsu.edu/biological-control-information-center/beneficial-predators/c-7-ladybeetle/',
+      'https://biocontrol.entomology.cornell.edu/predators/Coccinella.php',
+      'https://animaldiversity.org/accounts/Coccinella_septempunctata/',
+      'https://link.springer.com/article/10.1007/BF01240660',
+    ])
+    const study = links[3].closest('li')!
+    expect(study.textContent).toContain('已读摘要（未读全文）')
+    expect(study.textContent).not.toContain('已读全文')
+    expect(study.textContent).toContain('腿关节反射性出血')
+    expect(section.textContent).toContain('美国东北部世代与北美引入')
+    expect(section.textContent).toContain('2026-10-01')
+    expect(section.textContent).toContain('非专家复审')
+  })
+  it('localizes the ladybird source scopes and abstract access in English', () => {
+    renderEn(<DetailPanel insect={enInsects.find(insect => insect.id === 'ladybird')!} {...props} />)
+    const section = screen.getByRole('region', { name: 'Sources and checks' })
+    expect(within(section).getAllByRole('link')).toHaveLength(4)
+    expect(section.textContent).toContain('Abstract read; full text not read')
+    expect(section.textContent).toContain('Northeastern US generations and North American introduction')
+    expect(section.textContent).not.toMatch(/[一-鿿]/)
+  })
   it('shows three real evidence links with specific scope and keeps the correction action after them', () => {
     renderZh(<DetailPanel insect={zhInsects[0]} {...props} />)
     const section = screen.getByRole('region', { name: '来源与核校' })

@@ -88,7 +88,7 @@ describe('级别 —— 埋点上报的就是它', () => {
   it('俗名的一截 → alias', () => expect(tier('独角', 'rhinoceros-beetle')).toBe('alias'))
   it('拼音 → alias', () => expect(tier('shuimin', 'water-strider')).toBe('alias'))
   it('学名 → meta', () => expect(tier('coccinella', 'ladybird')).toBe('meta'))
-  // 「血淋巴」只出现在七星瓢虫的冷知识正文里，名称/学名/目/雅称都没有它
+  // 「血淋巴」出现在七星瓢虫的总述正文里，名称/学名/目/雅称都没有它
   it('正文 → text', () => expect(tier('血淋巴', 'ladybird')).toBe('text'))
   it('不沾边 → null', () => expect(tier('霸王龙', 'ladybird')).toBeNull())
 })

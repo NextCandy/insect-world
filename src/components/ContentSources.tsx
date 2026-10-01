@@ -1,5 +1,5 @@
 import { useId } from 'react'
-import { CONTENT_SOURCES, type ContentClaim } from '../data/contentSources'
+import { CONTENT_SOURCES, type ContentClaim, type ContentSource } from '../data/contentSources'
 import { useT } from '../i18n/useT'
 import s from './ContentSources.module.css'
 
@@ -7,7 +7,18 @@ const claimKeys = {
   'japanese-subspecies-length': 'sources.length',
   'diet-and-range': 'sources.dietRange',
   'male-combat': 'sources.combat',
+  'aphid-predation': 'sources.aphidPredation',
+  'adult-length-cornell': 'sources.cornellLength',
+  'us-season-and-introduction': 'sources.usSeasonIntroduction',
+  'larval-stages-and-native-range': 'sources.larvalStagesRange',
+  'reflex-bleeding': 'sources.reflexBleeding',
 } as const satisfies Record<ContentClaim, string>
+
+const accessKeys = {
+  'full-text': 'sources.fullText',
+  'official-page': 'sources.officialPage',
+  abstract: 'sources.abstract',
+} as const satisfies Record<ContentSource['access'], string>
 
 export function ContentSources({ insectId }: { insectId: string }) {
   const t = useT()
@@ -27,7 +38,7 @@ export function ContentSources({ insectId }: { insectId: string }) {
                   {t('sources.supports', { facts: source.supports.map(claim => t(claimKeys[claim])).join(t('sources.separator')) })}
                 </p>
                 <p className={s.checked}>
-                  {t(source.access === 'full-text' ? 'sources.fullText' : 'sources.officialPage')}
+                  {t(accessKeys[source.access])}
                   {' · '}{t('sources.checkedAt', { date: source.checkedAt })}
                 </p>
               </li>

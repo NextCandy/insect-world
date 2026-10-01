@@ -87,13 +87,19 @@ try {
     checks++
   }
   // 来源证据范围、中英文窄屏，以及未确认收件时保留反馈草稿。
-  for (const [path, heading] of [['/', '来源与核校'], ['/en/', 'Sources and checks']]) {
+  for (const [path, heading, count, date, abstractLabel] of [
+    ['/', '来源与核校', 3, '2026-09-30', null],
+    ['/en/', 'Sources and checks', 3, '2026-09-30', null],
+    ['/s/ladybird/', '来源与核校', 4, '2026-10-01', '已读摘要（未读全文）'],
+    ['/en/s/ladybird/', 'Sources and checks', 4, '2026-10-01', 'Abstract read; full text not read'],
+  ]) {
     const sourcePage = await testPage({ viewport: { width: 320, height: 844 } })
     await sourcePage.goto(`${base}${path}`)
     const sources = sourcePage.getByRole('region', { name: heading })
     await sources.scrollIntoViewIfNeeded()
-    assert.equal(await sources.getByRole('link').count(), 3)
-    assert.ok((await sources.textContent()).includes('2026-09-30'))
+    assert.equal(await sources.getByRole('link').count(), count)
+    assert.ok((await sources.textContent()).includes(date))
+    if (abstractLabel) await sources.getByText(abstractLabel).waitFor()
     assert.equal(await sourcePage.evaluate(() => document.documentElement.scrollWidth > innerWidth), false)
     await sourcePage.close()
     checks++
