@@ -9,7 +9,8 @@
 /**
  * 这台设备现在能不能建 WebGL 上下文。
  *
- * 拿一块一次性 canvas 试建（webgl2 不行再试 webgl1，three r150+ 两者都吃）。
+ * 拿一块一次性 canvas 试建 WebGL 2；本项目 Three r171 已不支持 WebGL 1。
+ * 探测后主动释放该临时上下文，避免多次探测占用浏览器的上下文额度。
  * 会走到 false 的真实场景：远程桌面、虚拟机、驱动被浏览器拉黑名单、
  * 用户关了硬件加速。直接挂 <Canvas> 的话 three 的构造器会 throw，
  * 白屏之外什么也留不下 —— 先问一声，不行就体面地摆剪影。
@@ -17,7 +18,14 @@
 export function webglAvailable(): boolean {
   try {
     const canvas = document.createElement('canvas')
-    return canvas.getContext('webgl2') !== null || canvas.getContext('webgl') !== null
+    const context = canvas.getContext('webgl2')
+    if (!context) return false
+    try {
+      context.getExtension('WEBGL_lose_context')?.loseContext()
+    } catch {
+      // 扩展不可用不改变探测结果；临时 canvas 仍可由浏览器回收。
+    }
+    return true
   } catch {
     return false
   }

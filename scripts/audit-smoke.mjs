@@ -113,8 +113,30 @@ try {
   checks++
   // 在实际R3F场景中持有模型，加载压力不得逐出正在展示的成虫/卵。
   const cachePage = await testPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true })
+  await cachePage.addInitScript(() => {
+    window.__probeReleases = 0
+    const getContext = HTMLCanvasElement.prototype.getContext
+    HTMLCanvasElement.prototype.getContext = function(kind, ...args) {
+      const context = getContext.call(this, kind, ...args)
+      if (kind === 'webgl2' && context && !this.isConnected) {
+        const getExtension = context.getExtension.bind(context)
+        context.getExtension = name => {
+          const extension = getExtension(name)
+          if (name !== 'WEBGL_lose_context' || !extension) return extension
+          return new Proxy(extension, { get(target, key) {
+            if (key === 'loseContext') return () => { window.__probeReleases++; target.loseContext() }
+            const value = Reflect.get(target, key)
+            return typeof value === 'function' ? value.bind(target) : value
+          } })
+        }
+      }
+      return context
+    }
+  })
   await cachePage.goto(`${base}/?perf=1`)
   await cachePage.waitForFunction(() => window.__perf?.firstFrame != null)
+  assert.ok(await cachePage.evaluate(() => window.__probeReleases >= 1), '临时探测上下文未释放')
+  assert.equal(await cachePage.evaluate(() => window.__perf.debug.gl.getContext().isContextLost()), false)
   await cachePage.evaluate(async () => {
     const debug = window.__perf.debug
     const current = await debug.loadInsectModel('rhinoceros-beetle')
@@ -198,7 +220,25 @@ try {
   assert.deepEqual(previewErrors, [])
   await previewPage.close()
   checks++
-  console.log(`✓ 浏览器回归 ${checks} 个场景通过（窄屏布局、换虫、存储故障、来源、反馈草稿、模型缓存与调试台）`)
+  const webgl1Page = await testPage({ viewport: { width: 390, height: 844 } })
+  let selectedBuilderRequests = 0
+  webgl1Page.on('request', request => { if (/rhinoceros-beetle-[^/]+\.js/.test(request.url())) selectedBuilderRequests++ })
+  await webgl1Page.addInitScript(() => {
+    const original = HTMLCanvasElement.prototype.getContext
+    HTMLCanvasElement.prototype.getContext = function(kind, ...args) {
+      if (kind === 'webgl2') return null
+      if (kind === 'webgl') return {}
+      return original.call(this, kind, ...args)
+    }
+  })
+  await webgl1Page.goto(base)
+  await webgl1Page.getByText(/WebGL 不可用/).waitFor()
+  assert.equal(await webgl1Page.locator('.stage-height canvas').count(), 0)
+  assert.equal(selectedBuilderRequests, 0)
+  await webgl1Page.getByRole('heading', { name: '双叉犀金龟', exact: true }).waitFor()
+  await webgl1Page.close()
+  checks++
+  console.log(`✓ 浏览器回归 ${checks} 个场景通过（窄屏布局、换虫、存储故障、来源、反馈草稿、模型缓存、调试台与WebGL1兜底）`)
 } finally {
   try { await browser?.close() } finally { server.kill('SIGTERM') }
 }
